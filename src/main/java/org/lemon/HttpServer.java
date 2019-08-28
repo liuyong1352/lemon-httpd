@@ -23,7 +23,6 @@ public class HttpServer {
             Socket socket = serverSocket.accept();
             OutputStream outputStream = socket.getOutputStream();
             outputStream.write(responseStr.getBytes());
-
             /**
              * 此处可以试试不执行，浏览器是否能正常显示出 helloworld
              */
