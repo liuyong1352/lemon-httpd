@@ -14,7 +14,18 @@ import java.net.Socket;
  */
 public class HttpServer {
 
+    /**
+     * http 响应报文格式
+     *
+     *
+     *
+     * @param args
+     * @throws Exception
+     */
+
     public static void main(String args[]) throws Exception{
+        final byte[] responseStatus = "HTTP/1.1 200 OK\r\n".getBytes("utf-8");
+        final byte[] CRLN = "\r\n".getBytes();
         final String responseStr = "Hello World!";
         int port = 80 ;
         ServerSocket serverSocket = new ServerSocket(80);
@@ -22,13 +33,18 @@ public class HttpServer {
         //serverSocket.bind(endpoint);
         while (true){
             Socket socket = serverSocket.accept();
-            OutputStream outputStream = socket.getOutputStream();
-            outputStream.write(responseStr.getBytes());
+            System.out.println("accept connection:" + socket.getRemoteSocketAddress().toString());
 
-            /**
-             * 此处可以试试不执行，浏览器是否能正常显示出 helloworld
-             */
-            outputStream.close();
+            OutputStream outputStream = socket.getOutputStream();
+            //status-line
+            outputStream.write(responseStatus);
+
+            outputStream.write(("Content-Length:0").getBytes());
+            outputStream.write(CRLN);
+
+            outputStream.write(CRLN);
+            //此处我们就不关闭socket了，浏览器也能正常输出了
+            //outputStream.close();
         }
     }
 }
