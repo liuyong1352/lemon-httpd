@@ -8,14 +8,14 @@ import java.net.Socket;
  *
  * 实现一个超级简单 能响应下浏览器请求，返回数据即可
  *
- * 姑且称之为Http版本的 Helloworld
+ * 姑且称之为Http版本的 Hello World!
  *
  * Created by bjliuyong on 2019/8/28.
  */
 public class HttpServer {
 
     public static void main(String args[]) throws Exception{
-        final String responseStr = "helloworld";
+        final String responseStr = "Hello World!";
         int port = 80 ;
         ServerSocket serverSocket = new ServerSocket(80);
         System.out.println("server listen on port:" + port);
