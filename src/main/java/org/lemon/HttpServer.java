@@ -25,8 +25,8 @@ public class HttpServer {
 
     public static void main(String args[]) throws Exception{
         final byte[] responseStatus = "HTTP/1.1 200 OK\r\n".getBytes("utf-8");
-        final byte[] CRLN = "\r\n".getBytes();
-        final String responseStr = "Hello World!";
+        final byte[] CRLN = "\r\n".getBytes("utf-8");
+        final byte[] content = "Hello World!".getBytes("utf-8");
         int port = 80 ;
         ServerSocket serverSocket = new ServerSocket(80);
         System.out.println("server listen on port:" + port);
@@ -39,10 +39,14 @@ public class HttpServer {
             //status-line
             outputStream.write(responseStatus);
 
-            outputStream.write(("Content-Length:0").getBytes());
+            //header --- start ----------
+            outputStream.write(("Content-Length:" + content.length).getBytes("utf-8"));
+            outputStream.write(CRLN);
+            //header ---- end ------------
             outputStream.write(CRLN);
 
-            outputStream.write(CRLN);
+            outputStream.write(content);
+
             //此处我们就不关闭socket了，浏览器也能正常输出了
             //outputStream.close();
         }
