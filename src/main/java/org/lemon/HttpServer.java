@@ -15,10 +15,9 @@ import java.net.Socket;
 public class HttpServer {
 
     public static void main(String args[]) throws Exception{
-
-        final String httpResponseHeader = "HTTP/1.1 200 OK\r\n";
-
-        final String responseStr = "Hello World!\r\n";
+        final byte[] responseStatus = "HTTP/1.1 200 OK\r\n".getBytes("utf-8");
+        final byte[] CRLN = "\r\n".getBytes();
+        final String responseStr = "Hello World!";
         int port = 80 ;
         ServerSocket serverSocket = new ServerSocket(80);
         System.out.println("server listen on port:" + port);
@@ -26,12 +25,15 @@ public class HttpServer {
         while (true){
             Socket socket = serverSocket.accept();
             System.out.println("accept connection:" + socket.getRemoteSocketAddress().toString());
+
             OutputStream outputStream = socket.getOutputStream();
-            outputStream.write(httpResponseHeader.getBytes());
-            outputStream.write("\n".getBytes());
-            outputStream.write(responseStr.getBytes());
-            //outputStream.write("\r\n".getBytes());
-            outputStream.close();
+            outputStream.write(responseStatus);
+            //outputStream.write(("Content-Length:"+responseStr.getBytes().length).getBytes());
+            outputStream.write(("Content-Length:0").getBytes());
+            outputStream.write(CRLN);
+            outputStream.write(CRLN);
+            //outputStream.write(responseStr.getBytes());
+
         }
     }
 }
