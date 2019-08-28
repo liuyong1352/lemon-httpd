@@ -15,19 +15,22 @@ import java.net.Socket;
 public class HttpServer {
 
     public static void main(String args[]) throws Exception{
-        final String responseStr = "Hello World!";
+
+        final String httpResponseHeader = "HTTP/1.1 200 OK\r\n";
+
+        final String responseStr = "Hello World!\r\n";
         int port = 80 ;
         ServerSocket serverSocket = new ServerSocket(80);
         System.out.println("server listen on port:" + port);
         //serverSocket.bind(endpoint);
         while (true){
             Socket socket = serverSocket.accept();
+            System.out.println("accept connection:" + socket.getRemoteSocketAddress().toString());
             OutputStream outputStream = socket.getOutputStream();
+            outputStream.write(httpResponseHeader.getBytes());
+            outputStream.write("\n".getBytes());
             outputStream.write(responseStr.getBytes());
-
-            /**
-             * 此处可以试试不执行，浏览器是否能正常显示出 helloworld
-             */
+            //outputStream.write("\r\n".getBytes());
             outputStream.close();
         }
     }
