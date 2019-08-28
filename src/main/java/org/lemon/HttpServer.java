@@ -19,7 +19,6 @@ public class HttpServer {
         int port = 80 ;
         ServerSocket serverSocket = new ServerSocket(80);
         System.out.println("server listen on port:" + port);
-        //serverSocket.bind(endpoint);
         while (true){
             Socket socket = serverSocket.accept();
             OutputStream outputStream = socket.getOutputStream();
