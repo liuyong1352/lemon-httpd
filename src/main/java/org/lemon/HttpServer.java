@@ -14,6 +14,15 @@ import java.net.Socket;
  */
 public class HttpServer {
 
+    /**
+     * http 响应报文格式
+     *
+     *
+     *
+     * @param args
+     * @throws Exception
+     */
+
     public static void main(String args[]) throws Exception{
         final byte[] responseStatus = "HTTP/1.1 200 OK\r\n".getBytes("utf-8");
         final byte[] CRLN = "\r\n".getBytes();
@@ -27,13 +36,16 @@ public class HttpServer {
             System.out.println("accept connection:" + socket.getRemoteSocketAddress().toString());
 
             OutputStream outputStream = socket.getOutputStream();
+            //status-line
             outputStream.write(responseStatus);
-            //outputStream.write(("Content-Length:"+responseStr.getBytes().length).getBytes());
+
             outputStream.write(("Content-Length:0").getBytes());
             outputStream.write(CRLN);
-            outputStream.write(CRLN);
-            //outputStream.write(responseStr.getBytes());
 
+            outputStream.write(CRLN);
+
+            //此处我们就不关闭socket了，浏览器也能正常输出了
+            //outputStream.close();
         }
     }
 }
