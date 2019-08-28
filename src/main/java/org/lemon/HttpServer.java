@@ -25,7 +25,7 @@ public class HttpServer {
 
     public static void main(String args[]) throws Exception{
         final byte[] responseStatus = "HTTP/1.1 200 OK\r\n".getBytes("utf-8");
-        final byte[] CRLN = "\r\n".getBytes("utf-8");
+        final byte[] CRLF = "\r\n".getBytes("utf-8");
         final byte[] content = "Hello World!".getBytes("utf-8");
         int port = 80 ;
         ServerSocket serverSocket = new ServerSocket(80);
@@ -41,9 +41,9 @@ public class HttpServer {
 
             //header --- start ----------
             outputStream.write(("Content-Length:" + content.length).getBytes("utf-8"));
-            outputStream.write(CRLN);
+            outputStream.write(CRLF);
             //header ---- end ------------
-            outputStream.write(CRLN);
+            outputStream.write(CRLF);
 
             outputStream.write(content);
 
