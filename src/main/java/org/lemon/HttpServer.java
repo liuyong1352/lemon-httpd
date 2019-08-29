@@ -24,28 +24,26 @@ public class HttpServer {
      */
 
     public static void main(String args[]) throws Exception{
-        final byte[] responseStatus = "HTTP/1.1 200 OK\r\n".getBytes("utf-8");
+        final byte[] StatusLine = "HTTP/1.1 200 OK\r\n".getBytes("utf-8");
         final byte[] CRLF = "\r\n".getBytes("utf-8");
-        final byte[] content = "Hello World!".getBytes("utf-8");
+        final byte[] MesssageBody = "Hello World!".getBytes("utf-8");
         int port = 80 ;
         ServerSocket serverSocket = new ServerSocket(80);
         System.out.println("server listen on port:" + port);
-        //serverSocket.bind(endpoint);
         while (true){
             Socket socket = serverSocket.accept();
             System.out.println("accept connection:" + socket.getRemoteSocketAddress().toString());
-
             OutputStream outputStream = socket.getOutputStream();
             //status-line
-            outputStream.write(responseStatus);
+            outputStream.write(StatusLine);
 
             //header --- start ----------
-            outputStream.write(("Content-Length:" + content.length).getBytes("utf-8"));
+            outputStream.write(("Content-Length:" + MesssageBody.length).getBytes("utf-8"));
             outputStream.write(CRLF);
             //header ---- end ------------
             outputStream.write(CRLF);
 
-            outputStream.write(content);
+            outputStream.write(MesssageBody);
 
             //此处我们就不关闭socket了，浏览器也能正常输出了
             //outputStream.close();
