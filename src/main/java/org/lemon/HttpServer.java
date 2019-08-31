@@ -1,5 +1,8 @@
 package org.lemon;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -14,39 +17,87 @@ import java.net.Socket;
  */
 public class HttpServer {
 
-    /**
-     * http 响应报文格式
-     *
-     *
-     *
-     * @param args
-     * @throws Exception
-     */
 
     public static void main(String args[]) throws Exception{
-        final byte[] StatusLine = "HTTP/1.1 200 OK\r\n".getBytes("utf-8");
-        final byte[] CRLF = "\r\n".getBytes("utf-8");
-        final byte[] MesssageBody = "Hello World!".getBytes("utf-8");
         int port = 80 ;
         ServerSocket serverSocket = new ServerSocket(80);
         System.out.println("server listen on port:" + port);
         while (true){
             Socket socket = serverSocket.accept();
-            System.out.println("accept connection:" + socket.getRemoteSocketAddress().toString());
-            OutputStream outputStream = socket.getOutputStream();
-            //status-line
-            outputStream.write(StatusLine);
-
-            //header --- start ----------
-            outputStream.write(("Content-Length:" + MesssageBody.length).getBytes("utf-8"));
-            outputStream.write(CRLF);
-            //header ---- end ------------
-            outputStream.write(CRLF);
-
-            outputStream.write(MesssageBody);
-
-            //此处我们就不关闭socket了，浏览器也能正常输出了
-            //outputStream.close();
+            try {
+                handle(socket);
+            }catch (Exception e) {
+                e.printStackTrace();
+                socket.close();
+            }
         }
     }
+
+    private static void handle(Socket socket) throws Exception{
+        final byte[] StatusLine = "HTTP/1.1 200 OK\r\n".getBytes("utf-8");
+        final byte[] CRLF = "\r\n".getBytes("utf-8");
+        final byte[] MesssageBody = "Hello World!".getBytes("utf-8");
+        System.out.println("accept connection:" + socket.getRemoteSocketAddress().toString());
+
+        HttpRequestMessage httpRequestMessage = parseRequestMessage(socket);
+
+        OutputStream outputStream = socket.getOutputStream();
+        //status-line
+        outputStream.write(StatusLine);
+
+        //header --- start ----------
+        outputStream.write(("Content-Length:" + MesssageBody.length).getBytes("utf-8"));
+        outputStream.write(CRLF);
+        //header ---- end ------------
+        outputStream.write(CRLF);
+
+        outputStream.write(MesssageBody);
+        //此处我们就不关闭socket了，浏览器也能正常输出了
+        //outputStream.close();
+    }
+
+    private static HttpRequestMessage parseRequestMessage(Socket socket) throws Exception{
+        HttpRequestMessage requestMessage = new HttpRequestMessage();
+        InputStream inputStream = socket.getInputStream();
+
+        //readline
+        byte[] bytes = new byte[20];
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(1024);
+        int step = 1;
+        int n = 0;
+        boolean end = false;
+        do {
+            n = inputStream.read(bytes);
+
+            if(n == -1){
+                //no_data
+                break;
+            }
+            for(int i = 0; i < n;i++){
+                if(bytes[i] == '\r') {
+                    continue;
+                } else if(bytes[i] == '\n'){
+                    byte[] data = byteArrayOutputStream.toByteArray();
+                    if(data.length == 0){
+                        end = true;
+                        break;
+                    }
+                    String line = new String(data);
+                    byteArrayOutputStream.reset();
+                    if(step == 1) {
+                        requestMessage.setRequestLine(line);
+                        step = 2;
+                    } else if (step == 2) {
+                        requestMessage.getHeaders().add(line);
+                        //解析请求头
+                    }
+
+                    continue;
+                }
+                byteArrayOutputStream.write(bytes[i]);
+            }
+        }while (!end);
+        return requestMessage;
+    }
+
 }
