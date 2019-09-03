@@ -1,6 +1,5 @@
 package org.lemon;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -9,9 +8,8 @@ import java.net.Socket;
 
 /**
  *
- * 实现一个超级简单 能响应下浏览器请求，返回数据即可
+ * 实现一个超级简单 能响应下浏览器请求，解析http 请求
  *
- * 姑且称之为Http版本的 Hello World!
  *
  * Created by bjliuyong on 2019/8/28.
  */
@@ -40,6 +38,7 @@ public class HttpServer {
         System.out.println("accept connection:" + socket.getRemoteSocketAddress().toString());
 
         HttpRequestMessage httpRequestMessage = parseRequestMessage(socket);
+        System.out.println("request line:" + httpRequestMessage.getRequestLine());
 
         OutputStream outputStream = socket.getOutputStream();
         //status-line
