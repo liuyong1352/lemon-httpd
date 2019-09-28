@@ -30,6 +30,8 @@ public class HttpServer {
                 handle(socket);
             }catch (Exception e) {
                 e.printStackTrace();
+
+            } finally {
                 socket.close();
             }
         }
@@ -74,6 +76,7 @@ public class HttpServer {
 
             if(n == -1){
                 //no_data
+                System.out.println("close!!");
                 break;
             }
             for(int i = 0; i < n;i++){
