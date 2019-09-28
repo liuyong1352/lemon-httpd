@@ -18,7 +18,11 @@ public class HttpServer {
 
     public static void main(String args[]) throws Exception{
         int port = 80 ;
-        ServerSocket serverSocket = new ServerSocket(80);
+        if(args.length == 1){
+            port = Integer.valueOf(args[0]);
+        }
+
+        ServerSocket serverSocket = new ServerSocket(port);
         System.out.println("server listen on port:" + port);
         while (true){
             Socket socket = serverSocket.accept();
