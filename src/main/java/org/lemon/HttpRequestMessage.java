@@ -5,7 +5,6 @@ import java.util.List;
 
 public class HttpRequestMessage {
 
-
     private String requestLine;
     private List<String> headers = new ArrayList<String>();
     private String body;
