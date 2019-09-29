@@ -30,9 +30,10 @@ public class HttpServer {
                 handle(socket);
             } catch (Exception e) {
                 e.printStackTrace();
-                socket.close();
-            } finally {
 
+            } finally {
+                //try not to close connection
+                socket.close();
             }
         }
     }
@@ -46,11 +47,6 @@ public class HttpServer {
 
         HttpRequestMessage httpRequestMessage = parseRequestMessage(socket);
         System.out.println("request line:" + httpRequestMessage.getRequestLine());
-
-       /* ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        byteArrayOutputStream.write(StatusLine,0,StatusLine.length);
-        byteArrayOutputStream.write(CRLF,0,CRLF.length);
-        byteArrayOutputStream.write(MesssageBody,0,MesssageBody.length);*/
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         //status-line
