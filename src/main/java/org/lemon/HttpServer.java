@@ -3,50 +3,56 @@ package org.lemon;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 /**
- *
  * 实现一个超级简单 能响应下浏览器请求，解析http 请求
- *
- *
+ * <p>
+ * <p>
  * Created by bjliuyong on 2019/8/28.
  */
 public class HttpServer {
 
 
-    public static void main(String args[]) throws Exception{
-        int port = 80 ;
-        if(args.length == 1){
+    public static void main(String args[]) throws Exception {
+        int port = 80;
+        if (args.length == 1) {
             port = Integer.valueOf(args[0]);
         }
-
-        ServerSocket serverSocket = new ServerSocket(port);
+        InetAddress inetAddress = InetAddress.getByName("127.0.0.1");
+        ServerSocket serverSocket = new ServerSocket(port,50,inetAddress);
         System.out.println("server listen on port:" + port);
-        while (true){
+        while (true) {
             Socket socket = serverSocket.accept();
             try {
                 handle(socket);
-            }catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
-
-            } finally {
                 socket.close();
+            } finally {
+
             }
         }
     }
 
-    private static void handle(Socket socket) throws Exception{
+    private static void handle(Socket socket) throws Exception {
         final byte[] StatusLine = "HTTP/1.1 200 OK\r\n".getBytes("utf-8");
         final byte[] CRLF = "\r\n".getBytes("utf-8");
         final byte[] MesssageBody = "Hello World!".getBytes("utf-8");
-        System.out.println("accept connection:" + socket.getRemoteSocketAddress().toString());
+        System.out.println("accept connection:" + socket.getRemoteSocketAddress().toString()
+                + " on" + socket.getLocalSocketAddress().toString());
 
         HttpRequestMessage httpRequestMessage = parseRequestMessage(socket);
         System.out.println("request line:" + httpRequestMessage.getRequestLine());
 
-        OutputStream outputStream = socket.getOutputStream();
+       /* ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        byteArrayOutputStream.write(StatusLine,0,StatusLine.length);
+        byteArrayOutputStream.write(CRLF,0,CRLF.length);
+        byteArrayOutputStream.write(MesssageBody,0,MesssageBody.length);*/
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         //status-line
         outputStream.write(StatusLine);
 
@@ -57,11 +63,12 @@ public class HttpServer {
         outputStream.write(CRLF);
 
         outputStream.write(MesssageBody);
+        outputStream.writeTo(socket.getOutputStream());
         //此处我们就不关闭socket了，浏览器也能正常输出了
         //outputStream.close();
     }
 
-    private static HttpRequestMessage parseRequestMessage(Socket socket) throws Exception{
+    private static HttpRequestMessage parseRequestMessage(Socket socket) throws Exception {
         HttpRequestMessage requestMessage = new HttpRequestMessage();
         InputStream inputStream = socket.getInputStream();
 
@@ -74,23 +81,23 @@ public class HttpServer {
         do {
             n = inputStream.read(bytes);
 
-            if(n == -1){
+            if (n == -1) {
                 //no_data
                 System.out.println("close!!");
                 break;
             }
-            for(int i = 0; i < n;i++){
-                if(bytes[i] == '\r') {
+            for (int i = 0; i < n; i++) {
+                if (bytes[i] == '\r') {
                     continue;
-                } else if(bytes[i] == '\n'){
+                } else if (bytes[i] == '\n') {
                     byte[] data = byteArrayOutputStream.toByteArray();
-                    if(data.length == 0){
+                    if (data.length == 0) {
                         end = true;
                         break;
                     }
                     String line = new String(data);
                     byteArrayOutputStream.reset();
-                    if(step == 1) {
+                    if (step == 1) {
                         requestMessage.setRequestLine(line);
                         step = 2;
                     } else if (step == 2) {
@@ -102,7 +109,7 @@ public class HttpServer {
                 }
                 byteArrayOutputStream.write(bytes[i]);
             }
-        }while (!end);
+        } while (!end);
         return requestMessage;
     }
 
