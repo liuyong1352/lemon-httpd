@@ -6,13 +6,13 @@
 进入到编译后 target目录 classes下  
 
 启动server 
-```java
+
 java org.lemon.HttpServer 10080
-```
+
 启动test
-```java
+
 java org.lemon.HttpTest http://127.0.0.1:10080
-```
+
 
 多次write,会发和多tcp报文段  
 修改后只发一次数据
