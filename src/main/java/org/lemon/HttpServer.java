@@ -29,9 +29,9 @@ public class HttpServer {
             } catch (Exception e) {
                 e.printStackTrace();
                 //try not to close connection
-                socket.close();
-            } finally {
                 //socket.close();
+            } finally {
+                socket.close();
             }
         }
     }
