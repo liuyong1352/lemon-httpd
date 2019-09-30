@@ -2,7 +2,6 @@ package org.lemon;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -15,14 +14,13 @@ import java.net.Socket;
  */
 public class HttpServer {
 
-
     public static void main(String args[]) throws Exception {
         int port = 80;
         if (args.length == 1) {
             port = Integer.valueOf(args[0]);
         }
         InetAddress inetAddress = InetAddress.getByName("127.0.0.1");
-        ServerSocket serverSocket = new ServerSocket(port,50,inetAddress);
+        ServerSocket serverSocket = new ServerSocket(port, 50, inetAddress);
         System.out.println("server listen on port:" + port);
         while (true) {
             Socket socket = serverSocket.accept();
@@ -30,10 +28,10 @@ public class HttpServer {
                 handle(socket);
             } catch (Exception e) {
                 e.printStackTrace();
-
-            } finally {
                 //try not to close connection
                 socket.close();
+            } finally {
+                //socket.close();
             }
         }
     }
@@ -43,7 +41,7 @@ public class HttpServer {
         final byte[] CRLF = "\r\n".getBytes("utf-8");
         final byte[] MesssageBody = "Hello World!".getBytes("utf-8");
         System.out.println("accept connection:" + socket.getRemoteSocketAddress().toString()
-                + " on" + socket.getLocalSocketAddress().toString());
+            + " on" + socket.getLocalSocketAddress().toString());
 
         HttpRequestMessage httpRequestMessage = parseRequestMessage(socket);
         System.out.println("request line:" + httpRequestMessage.getRequestLine());
@@ -105,7 +103,8 @@ public class HttpServer {
                 }
                 byteArrayOutputStream.write(bytes[i]);
             }
-        } while (!end);
+        }
+        while (!end);
         return requestMessage;
     }
 
