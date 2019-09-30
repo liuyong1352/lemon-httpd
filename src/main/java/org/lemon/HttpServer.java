@@ -6,6 +6,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 实现一个超级简单 能响应下浏览器请求，解析http 请求
@@ -14,6 +15,8 @@ import java.net.SocketException;
  * Created by bjliuyong on 2019/8/28.
  */
 public class HttpServer {
+
+    public static AtomicInteger counter = new AtomicInteger(0);
 
     public static void main(String args[]) throws Exception {
         int port = 80;
@@ -25,6 +28,7 @@ public class HttpServer {
         System.out.println("server listen on port:" + port);
         while (true) {
             Socket socket = serverSocket.accept();
+            counter.incrementAndGet();
             try {
                 handle(socket);
             } catch (Exception e) {
@@ -41,14 +45,15 @@ public class HttpServer {
         final byte[] MesssageBody = "Hello World!".getBytes("utf-8");
         System.out.println("accept connection:" + socket.getRemoteSocketAddress().toString()
             + " on" + socket.getLocalSocketAddress().toString());
-        try{
-            while (true){
+        try {
+            while (true) {
                 HttpRequestMessage httpRequestMessage = parseRequestMessage(socket);
                 System.out.println("request line:" + httpRequestMessage.getRequestLine());
-                sendResponse(socket,MesssageBody);
+                sendResponse(socket, MesssageBody);
             }
-        }catch (SocketException se){
+        } catch (SocketException se) {
             se.printStackTrace();
+            System.out.println("counter:" + counter.get());
         }
 
     }
