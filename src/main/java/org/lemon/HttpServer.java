@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 
 /**
  * 实现一个超级简单 能响应下浏览器请求，解析http 请求
@@ -40,9 +41,16 @@ public class HttpServer {
         final byte[] MesssageBody = "Hello World!".getBytes("utf-8");
         System.out.println("accept connection:" + socket.getRemoteSocketAddress().toString()
             + " on" + socket.getLocalSocketAddress().toString());
-        HttpRequestMessage httpRequestMessage = parseRequestMessage(socket);
-        System.out.println("request line:" + httpRequestMessage.getRequestLine());
-        sendResponse(socket,MesssageBody);
+        try{
+            while (true){
+                HttpRequestMessage httpRequestMessage = parseRequestMessage(socket);
+                System.out.println("request line:" + httpRequestMessage.getRequestLine());
+                sendResponse(socket,MesssageBody);
+            }
+        }catch (SocketException se){
+            se.printStackTrace();
+        }
+
     }
 
     /**
