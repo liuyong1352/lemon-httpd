@@ -37,29 +37,35 @@ public class HttpServer {
     }
 
     private static void handle(Socket socket) throws Exception {
-        final byte[] StatusLine = "HTTP/1.1 200 OK\r\n".getBytes("utf-8");
-        final byte[] CRLF = "\r\n".getBytes("utf-8");
         final byte[] MesssageBody = "Hello World!".getBytes("utf-8");
         System.out.println("accept connection:" + socket.getRemoteSocketAddress().toString()
             + " on" + socket.getLocalSocketAddress().toString());
-
         HttpRequestMessage httpRequestMessage = parseRequestMessage(socket);
         System.out.println("request line:" + httpRequestMessage.getRequestLine());
+        sendResponse(socket,MesssageBody);
+    }
 
+    /**
+     * 将数据写入socket 流中
+     *
+     * @param socket
+     * @param body
+     */
+    private static void sendResponse(Socket socket, byte[] body) throws Exception {
+        final byte[] StatusLine = "HTTP/1.1 200 OK\r\n".getBytes("utf-8");
+        final byte[] CRLF = "\r\n".getBytes("utf-8");
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         //status-line
         outputStream.write(StatusLine);
 
         //header --- start ----------
-        outputStream.write(("Content-Length:" + MesssageBody.length).getBytes("utf-8"));
+        outputStream.write(("Content-Length:" + body.length).getBytes("utf-8"));
         outputStream.write(CRLF);
         //header ---- end ------------
         outputStream.write(CRLF);
 
-        outputStream.write(MesssageBody);
+        outputStream.write(body);
         outputStream.writeTo(socket.getOutputStream());
-        //此处我们就不关闭socket了，浏览器也能正常输出了
-        //outputStream.close();
     }
 
     private static HttpRequestMessage parseRequestMessage(Socket socket) throws Exception {
