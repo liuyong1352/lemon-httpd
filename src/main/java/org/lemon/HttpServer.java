@@ -48,7 +48,7 @@ public class HttpServer {
         try {
             while (true) {
                 HttpRequestMessage httpRequestMessage = parseRequestMessage(socket);
-                System.out.println("request line:" + httpRequestMessage.getRequestLine());
+                //System.out.println("request line:" + httpRequestMessage.getRequestLine());
                 sendResponse(socket, MesssageBody);
             }
         } catch (SocketException se) {

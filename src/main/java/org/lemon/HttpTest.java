@@ -11,7 +11,7 @@ public class HttpTest {
         if (args.length == 1) {
             url = args[0];
         }
-        int n = 10000;
+        int n = 250000;
         long start = System.currentTimeMillis();
         for (int i = 0; i < n; i++) {
             testGet(url);
