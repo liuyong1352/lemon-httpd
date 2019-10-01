@@ -19,7 +19,7 @@ public class HttpServer {
     public static AtomicInteger counter = new AtomicInteger(0);
 
     public static void main(String args[]) throws Exception {
-        int port = 80;
+        int port = 8080;
         if (args.length == 1) {
             port = Integer.valueOf(args[0]);
         }
