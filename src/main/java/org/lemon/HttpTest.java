@@ -31,6 +31,8 @@ public class HttpTest {
         inputStream.close();
         if (httpURLConnection.getResponseCode() == 200 && n > 0) {
             return;
+        } else{
+            throw new RuntimeException("get error");
         }
     }
 }
