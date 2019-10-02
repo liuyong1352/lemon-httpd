@@ -57,7 +57,6 @@ public class HttpServer {
             se.printStackTrace();
             System.out.println("counter:" + counter.get());
         }
-
     }
 
     /**
@@ -88,7 +87,7 @@ public class HttpServer {
         InputStream inputStream = socket.getInputStream();
 
         //readline
-        byte[] bytes = new byte[20];
+        byte[] bytes = new byte[8*1024];
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(1024);
         int step = 1;
         int n = 0;
