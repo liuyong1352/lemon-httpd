@@ -3,36 +3,78 @@ package org.lemon;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class HttpTest {
+
+    private static AtomicInteger counter = new AtomicInteger();
 
     public static void main(String args[]) throws Exception {
         String url = "http://127.0.0.1:8080";
         if (args.length == 1) {
             url = args[0];
         }
-        int n = 250000;
+        int nThread = 2;
+        if (args.length == 2) {
+            nThread = Integer.valueOf(args[1]);
+        }
+
+        Worker workers[] = new Worker[nThread];
+        CountDownLatch latch = new CountDownLatch(nThread);
+        for (int i = 0; i < nThread; i++) {
+            workers[i] = new Worker(url, latch);
+            workers[i].start();
+            latch.countDown();
+        }
+
+
         long start = System.currentTimeMillis();
-        for (int i = 0; i < n; i++) {
-            testGet(url);
+        while (true) {
+            Thread.sleep(5000L);
+            double cost = (System.currentTimeMillis() - start) / 1000.0;
+            double tps = counter.get() / cost;
+            System.out.println("tps = " + tps + "  cost :" + cost);
         }
-
-        double cost = (System.currentTimeMillis() - start) / 1000.0;
-        double tps = n / cost;
-        System.out.println("tps = " + tps + "  cost :" + cost);
     }
 
-    public static void testGet(String url) throws Exception {
-        HttpURLConnection httpURLConnection = (HttpURLConnection) new URL(url).openConnection();
-        httpURLConnection.connect();
-        InputStream inputStream = httpURLConnection.getInputStream();
+    private static class Worker extends Thread {
+        String url;
+        CountDownLatch countDownLatch;
         byte buf[] = new byte[1024];
-        int n = inputStream.read(buf);
-        inputStream.close();
-        if (httpURLConnection.getResponseCode() == 200 && n > 0) {
-            return;
-        } else{
-            throw new RuntimeException("get error");
+
+        public Worker(String url, CountDownLatch countDownLatch) {
+            this.url = url;
+            this.countDownLatch = countDownLatch;
+        }
+
+        public void run() {
+
+            try {
+                countDownLatch.await();
+                while (true) {
+                    counter.incrementAndGet();
+                    testGet();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        private void testGet() throws Exception {
+            HttpURLConnection httpURLConnection = (HttpURLConnection) new URL(url).openConnection();
+            httpURLConnection.connect();
+            InputStream inputStream = httpURLConnection.getInputStream();
+            int n = inputStream.read(buf);
+            inputStream.close();
+            if (httpURLConnection.getResponseCode() == 200 && n > 0) {
+                return;
+            } else {
+                throw new RuntimeException("get error");
+            }
         }
     }
+
+
 }

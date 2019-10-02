@@ -44,12 +44,14 @@ public class HttpServer {
     private static void handle(Socket socket) throws Exception {
         final byte[] MesssageBody = "Hello World!".getBytes("utf-8");
         System.out.println("accept connection:" + socket.getRemoteSocketAddress().toString()
-            + " on" + socket.getLocalSocketAddress().toString());
+                + " on" + socket.getLocalSocketAddress().toString());
         try {
             while (true) {
                 HttpRequestMessage httpRequestMessage = parseRequestMessage(socket);
                 //System.out.println("request line:" + httpRequestMessage.getRequestLine());
-                sendResponse(socket, MesssageBody);
+                if (httpRequestMessage != null)
+                    sendResponse(socket, MesssageBody);
+
             }
         } catch (SocketException se) {
             se.printStackTrace();
