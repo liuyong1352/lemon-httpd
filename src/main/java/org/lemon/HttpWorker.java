@@ -55,7 +55,6 @@ public class HttpWorker extends Thread {
 
         //header --- start ----------
         outputStream.write(("Content-Length:" + body.length).getBytes("utf-8"));
-        //outputStream.write(("Content-Length:" + body.length).getBytes("utf-8"));
         outputStream.write(CRLF);
         //header ---- end ------------
         outputStream.write(CRLF);
