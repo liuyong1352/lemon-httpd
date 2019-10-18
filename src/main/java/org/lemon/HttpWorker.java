@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.net.Socket;
 import java.net.SocketException;
 
-public class HttpWorker extends Thread {
+public class HttpWorker implements Runnable {
 
     protected Socket socket;
 
@@ -78,7 +78,7 @@ public class HttpWorker extends Thread {
 
             if (n == -1) {
                 //no_data
-                System.out.println("close!!");
+                //System.out.println("close!!");
                 return null;
             }
             for (int i = 0; i < n; i++) {
