@@ -1,12 +1,10 @@
-package org.lemon;
+package org.lemon.http.server;
 
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -44,7 +42,7 @@ public class HttpServer {
                     + " on" + socket.getLocalSocketAddress().toString());*/
             counter.incrementAndGet();
             try {
-                executor.execute(new HttpWorker(socket));
+                executor.execute(new Task(socket));
             } catch (Exception e) {
                 e.printStackTrace();
             }

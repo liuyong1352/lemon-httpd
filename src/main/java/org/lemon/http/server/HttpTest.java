@@ -1,4 +1,4 @@
-package org.lemon;
+package org.lemon.http.server;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -11,6 +11,11 @@ public class HttpTest {
     private static AtomicInteger counter = new AtomicInteger();
 
     public static void main(String args[]) throws Exception {
+
+        //int c = \u005Cu001F;
+
+        System.out.println(Character.isISOControl(0));
+
         String url = "http://127.0.0.1:8080";
         if (args.length == 1) {
             url = args[0];

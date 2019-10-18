@@ -1,4 +1,4 @@
-package org.lemon;
+package org.lemon.http.server;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -6,11 +6,11 @@ import java.io.InputStream;
 import java.net.Socket;
 import java.net.SocketException;
 
-public class HttpWorker implements Runnable {
+public class Task implements Runnable {
 
     protected Socket socket;
 
-    public HttpWorker(Socket socket){
+    public Task(Socket socket){
         this.socket = socket;
     }
 
