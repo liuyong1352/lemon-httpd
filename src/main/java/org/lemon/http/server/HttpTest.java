@@ -15,7 +15,7 @@ public class HttpTest {
         if (args.length == 1) {
             url = args[0];
         }
-        int nThread = 16;
+        int nThread = 32;
         if (args.length == 2) {
             nThread = Integer.valueOf(args[1]);
         }

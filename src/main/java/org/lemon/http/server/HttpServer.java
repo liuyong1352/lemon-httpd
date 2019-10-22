@@ -38,14 +38,8 @@ public class HttpServer {
         System.out.println("server listen on port:" + port);
         while (true) {
             Socket socket = serverSocket.accept();
-            /*System.out.println("accept connection:" + socket.getRemoteSocketAddress().toString()
-                    + " on" + socket.getLocalSocketAddress().toString());*/
             counter.incrementAndGet();
-            try {
-                executor.execute(new Task(socket));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            executor.execute(new Task(socket));
         }
     }
 
