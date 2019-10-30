@@ -4,6 +4,7 @@ import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.DefaultHttpRequest;
 import io.netty.handler.codec.http.HttpMessage;
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpObjectDecoder;
 import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.internal.AppendableCharSequence;
@@ -33,7 +34,7 @@ public class Task implements Runnable {
         try {
             final byte[] MesssageBody = "Hello World!".getBytes("utf-8");
             while (true) {
-                parseRequestMessage(socket);
+                decode(socket);
                 if (message == null) {
                     break;
                 }
@@ -78,14 +79,14 @@ public class Task implements Runnable {
         outputStream.writeTo(socket.getOutputStream());
     }
 
-    private void parseRequestMessage(Socket socket) throws Exception {
+    private void decode(Socket socket) throws Exception {
         InputStream inputStream = socket.getInputStream();
 
         //readline
         byte[] bytes = new byte[8 * 1024];
         AppendableCharSequence line = new AppendableCharSequence(1024);
         int step = 1;
-        int n = 0;
+        int n;
         do {
             n = inputStream.read(bytes);
             if (n == -1) {
@@ -96,12 +97,13 @@ public class Task implements Runnable {
                     continue;
                 } else if (bytes[i] == LF) {
 
-
                     if (line.length() == 0) {
                         //解析完header
                         long contentLength = contentLength();
-                        if(contentLength <= 0){
+                        if (contentLength <= 0) {
                             step = 4;
+                        } else {
+
                         }
                         break;
                     }
@@ -112,18 +114,18 @@ public class Task implements Runnable {
                         step = 2;
                         line.reset();
                     } else if (step == 2) {
-                        if(line.length() == 0){
+                        if (line.length() == 0) {
                             step = 3;
                         }
                         splitHeader(line);
-                        message.headers().add(name,value);
+                        message.headers().add(name, value);
                         //解析请求头
                         line.reset();
                     }
 
                     continue;
                 }
-                line.append((char)bytes[i]);
+                line.append((char) bytes[i]);
             }
 
         }
@@ -138,7 +140,7 @@ public class Task implements Runnable {
         return contentLength;
     }
 
-    private HttpMessage createMessage(String[] initialLine) throws Exception{
+    private HttpMessage createMessage(String[] initialLine) throws Exception {
         return new DefaultHttpRequest(
             HttpVersion.valueOf(initialLine[2]),
             HttpMethod.valueOf(initialLine[0]), initialLine[1], false);
@@ -164,7 +166,7 @@ public class Task implements Runnable {
         return new String[] {
             sb.subStringUnsafe(aStart, aEnd),
             sb.subStringUnsafe(bStart, bEnd),
-            cStart < cEnd? sb.subStringUnsafe(cStart, cEnd) : "" };
+            cStart < cEnd ? sb.subStringUnsafe(cStart, cEnd) : ""};
     }
 
     private void splitHeader(AppendableCharSequence sb) {
@@ -176,16 +178,16 @@ public class Task implements Runnable {
         int valueEnd;
 
         nameStart = findNonWhitespace(sb, 0);
-        for (nameEnd = nameStart; nameEnd < length; nameEnd ++) {
+        for (nameEnd = nameStart; nameEnd < length; nameEnd++) {
             char ch = sb.charAt(nameEnd);
             if (ch == ':' || Character.isWhitespace(ch)) {
                 break;
             }
         }
 
-        for (colonEnd = nameEnd; colonEnd < length; colonEnd ++) {
+        for (colonEnd = nameEnd; colonEnd < length; colonEnd++) {
             if (sb.charAt(colonEnd) == ':') {
-                colonEnd ++;
+                colonEnd++;
                 break;
             }
         }
