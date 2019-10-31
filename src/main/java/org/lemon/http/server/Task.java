@@ -103,7 +103,6 @@ public class Task implements Runnable {
                         if (contentLength <= 0) {
                             step = 4;
                         } else {
-
                         }
                         break;
                     }
