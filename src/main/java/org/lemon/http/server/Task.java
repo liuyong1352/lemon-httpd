@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 import java.net.SocketException;
+import java.nio.charset.Charset;
+import java.util.logging.Logger;
 
 import static io.netty.handler.codec.http.HttpConstants.*;
 
@@ -42,7 +44,8 @@ public class Task implements Runnable {
                     break;
                 }
                 sendResponse(socket, MesssageBody);
-                if(httpContent != null){
+                if (httpContent != null) {
+                    System.out.println("http body:" + httpContent.content().toString(Charset.forName("utf-8")));
                     httpContent.release();
                     httpContent = null;
                 }
@@ -84,6 +87,7 @@ public class Task implements Runnable {
 
         outputStream.write(body);
         outputStream.writeTo(socket.getOutputStream());
+        Logger.getLogger("").info(new String(body));
     }
 
     private void decode(Socket socket) throws Exception {
@@ -96,6 +100,7 @@ public class Task implements Runnable {
         int n;
         do {
             n = inputStream.read(bytes);
+            System.out.println("read n" + n);
             if (n == -1) {
                 return;
             }
@@ -112,11 +117,29 @@ public class Task implements Runnable {
                         } else {
                             //解析固定长度body
                             int leftBytes = n - i - 1;
+                            ByteBuf byteBuf = ByteBufAllocator.DEFAULT.buffer((int) contentLength);
+                            httpContent = new DefaultHttpContent(byteBuf);
                             //有足够数据了
-                            if(leftBytes >= contentLength){
-                                ByteBuf byteBuf = ByteBufAllocator.DEFAULT.buffer((int)contentLength);
-                                byteBuf.writeBytes(bytes,i+1,(int)contentLength);
-                                httpContent = new DefaultHttpContent(byteBuf);
+                            if (leftBytes >= contentLength) {
+                                byteBuf.writeBytes(bytes, i + 1, (int) contentLength);
+                                step = 4;
+                            } else {
+                                if (leftBytes > 0) {
+                                    contentLength -= leftBytes;
+                                    httpContent.content().writeBytes(bytes, i + 1, leftBytes);
+                                }
+                                while (contentLength > 0 && (n = inputStream.read(bytes)) > 0) {
+                                    if(n >= contentLength){
+                                        httpContent.content().writeBytes(bytes, 0, (int)contentLength);
+                                        break;
+                                    } else {
+                                        httpContent.content().writeBytes(bytes, 0, n);
+                                        contentLength -= n;
+                                    }
+                                }
+                                if (n == -1) {
+                                    return;
+                                }
                                 step = 4;
                             }
                         }

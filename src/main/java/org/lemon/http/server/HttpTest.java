@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class HttpTest {
 
     private static AtomicInteger counter = new AtomicInteger();
-    private static boolean one = true;
+    private static boolean one = false;
 
     public static void main(String args[]) throws Exception {
         String url = "http://127.0.0.1:8080";
@@ -130,7 +130,7 @@ public class HttpTest {
                 outputStream.flush();
                 inputStream = httpURLConnection.getInputStream();
                 int n = inputStream.read(buf);
-                System.out.println(new String(buf,0,n));
+                //System.out.println(new String(buf,0,n));
                 if (httpURLConnection.getResponseCode() == 200 && n > 0) {
                     return;
                 } else {

@@ -8,11 +8,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 
 /**
  * Created by bjliuyong on 2019/8/28.
  */
 public class HttpServer {
+
+    public static Logger LOG = Logger.getAnonymousLogger();
 
     public static AtomicInteger counter = new AtomicInteger(0);
     private AtomicInteger threadId = new AtomicInteger(1);
