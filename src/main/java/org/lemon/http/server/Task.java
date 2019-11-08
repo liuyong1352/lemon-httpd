@@ -1,10 +1,12 @@
 package org.lemon.http.server;
 
-import io.netty.handler.codec.http.DefaultFullHttpRequest;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.handler.codec.http.DefaultHttpContent;
 import io.netty.handler.codec.http.DefaultHttpRequest;
+import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpMessage;
 import io.netty.handler.codec.http.HttpMethod;
-import io.netty.handler.codec.http.HttpObjectDecoder;
 import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.internal.AppendableCharSequence;
@@ -24,6 +26,7 @@ public class Task implements Runnable {
     private String value;
     private long contentLength = Long.MIN_VALUE;
     private HttpMessage message;
+    private HttpContent httpContent;
 
     public Task(Socket socket) {
         this.socket = socket;
@@ -39,6 +42,10 @@ public class Task implements Runnable {
                     break;
                 }
                 sendResponse(socket, MesssageBody);
+                if(httpContent != null){
+                    httpContent.release();
+                    httpContent = null;
+                }
                 message = null;
             }
         } catch (SocketException se) {
@@ -83,7 +90,7 @@ public class Task implements Runnable {
         InputStream inputStream = socket.getInputStream();
 
         //readline
-        byte[] bytes = new byte[8 * 1024];
+        byte[] bytes = new byte[1024];
         AppendableCharSequence line = new AppendableCharSequence(1024);
         int step = 1;
         int n;
@@ -103,6 +110,15 @@ public class Task implements Runnable {
                         if (contentLength <= 0) {
                             step = 4;
                         } else {
+                            //解析固定长度body
+                            int leftBytes = n - i - 1;
+                            //有足够数据了
+                            if(leftBytes >= contentLength){
+                                ByteBuf byteBuf = ByteBufAllocator.DEFAULT.buffer((int)contentLength);
+                                byteBuf.writeBytes(bytes,i+1,(int)contentLength);
+                                httpContent = new DefaultHttpContent(byteBuf);
+                                step = 4;
+                            }
                         }
                         break;
                     }
@@ -126,7 +142,6 @@ public class Task implements Runnable {
                 }
                 line.append((char) bytes[i]);
             }
-
         }
         while (step != 4);
 
