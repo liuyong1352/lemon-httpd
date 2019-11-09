@@ -15,8 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 import java.net.SocketException;
-import java.nio.charset.Charset;
-import java.util.logging.Logger;
+import sun.misc.Signal;
 
 import static io.netty.handler.codec.http.HttpConstants.*;
 
@@ -45,7 +44,7 @@ public class Task implements Runnable {
                 }
                 sendResponse(socket, MesssageBody);
                 if (httpContent != null) {
-                    System.out.println("http body:" + httpContent.content().toString(Charset.forName("utf-8")));
+                    //System.out.println("http body:" + httpContent.content().toString(Charset.forName("utf-8")));
                     httpContent.release();
                     httpContent = null;
                 }
@@ -87,7 +86,6 @@ public class Task implements Runnable {
 
         outputStream.write(body);
         outputStream.writeTo(socket.getOutputStream());
-        Logger.getLogger("").info(new String(body));
     }
 
     private void decode(Socket socket) throws Exception {
@@ -100,7 +98,7 @@ public class Task implements Runnable {
         int n;
         do {
             n = inputStream.read(bytes);
-            System.out.println("read n" + n);
+            //System.out.println("read n" + n);
             if (n == -1) {
                 return;
             }

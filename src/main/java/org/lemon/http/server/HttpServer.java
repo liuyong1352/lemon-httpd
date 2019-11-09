@@ -38,7 +38,7 @@ public class HttpServer {
     public void start() throws Exception {
         InetAddress inetAddress = InetAddress.getByName("127.0.0.1");
         ServerSocket serverSocket = new ServerSocket(port, 50, inetAddress);
-        System.out.println("server listen on port:" + port);
+        LOG.info("server listen on port:" + port);
         while (true) {
             Socket socket = serverSocket.accept();
             counter.incrementAndGet();
