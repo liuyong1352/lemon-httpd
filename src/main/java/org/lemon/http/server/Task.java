@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 import java.net.SocketException;
-import sun.misc.Signal;
 
 import static io.netty.handler.codec.http.HttpConstants.*;
 
