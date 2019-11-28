@@ -25,7 +25,7 @@ public class HttpTest {
 
         boolean testGet = false;
         nThread = one ? 1 : nThread;
-        Worker workers[] = new Worker[nThread];
+        Worker[] workers = new Worker[nThread];
         CountDownLatch latch = new CountDownLatch(nThread);
 
         for (int i = 0; i < nThread; i++) {
@@ -41,12 +41,12 @@ public class HttpTest {
             latch.countDown();
         }
 
-        long start = System.currentTimeMillis();
         while (true) {
+            counter.set(0);
             Thread.sleep(5000L);
-            double cost = (System.currentTimeMillis() - start) / 1000.0;
-            double tps = counter.get() / cost;
-            System.out.println("tps = " + tps + "  cost :" + cost);
+            int c = counter.getAndSet(0);
+            double tps = c / 5;
+            System.out.println("tps = " + tps + "  cost :" + 5 + "s");
         }
     }
 
@@ -117,7 +117,7 @@ public class HttpTest {
         }
 
         @Override
-        void test() throws Exception{
+        void test() throws Exception {
             HttpURLConnection httpURLConnection = (HttpURLConnection) new URL(url).openConnection();
             httpURLConnection.setDoInput(true);
             httpURLConnection.setDoOutput(true);
