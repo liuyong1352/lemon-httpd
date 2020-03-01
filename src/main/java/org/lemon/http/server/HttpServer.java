@@ -1,11 +1,10 @@
 package org.lemon.http.server;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.net.SocketAddress;
-import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.*;
+import java.nio.channels.spi.SelectorProvider;
+import java.util.Iterator;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -28,29 +27,43 @@ public class HttpServer {
 
     public void list(int port) throws Exception {
         this.port = port;
-        String hostName = "0.0.0.0";
-        InetAddress inetAddress = InetAddress.getByName(hostName);
-        SocketAddress socketAddress = new InetSocketAddress(inetAddress, this.port);
+        SocketAddress socketAddress = new InetSocketAddress(this.port);
+        Selector selector = SelectorProvider.provider().openSelector();
 
         ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
-        serverSocketChannel.configureBlocking(true);
+        serverSocketChannel.configureBlocking(false);
         serverSocketChannel.bind(socketAddress, 50);
+        serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
 
         LOG.info("server listen on port:" + this.port);
 
         this.executor = new ThreadPoolExecutor(50, 50,
-            0L, TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<>(5000),
-            r -> {
-                Thread thread = new Thread(r);
-                thread.setName("http-worker" + threadId.addAndGet(1));
-                return thread;
-            });
+                0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<>(5000),
+                r -> {
+                    Thread thread = new Thread(r);
+                    thread.setName("http-worker" + threadId.addAndGet(1));
+                    return thread;
+                });
 
         while (true) {
-            Socket socket = serverSocketChannel.accept().socket();
-            counter.incrementAndGet();
-            executor.execute(new Task(socket));
+            int count = selector.select();
+            if (count > 0) {
+                Iterator<SelectionKey> selectionKeyIterator = selector.selectedKeys().iterator();
+                while (selectionKeyIterator.hasNext()){
+                    SelectionKey selectionKey = selectionKeyIterator.next();
+                    if(selectionKey.isAcceptable()){
+                        ServerSocketChannel serverSocketChannel1 = (ServerSocketChannel) selectionKey.channel();
+                        SocketChannel  socketChannel = serverSocketChannel1.accept();
+                        System.out.println(socketChannel.getRemoteAddress());
+                        counter.incrementAndGet();
+                        selectionKeyIterator.remove();
+                        executor.execute(new Task(socketChannel.socket()));
+                    }
+
+                }
+            }
+
         }
     }
 
