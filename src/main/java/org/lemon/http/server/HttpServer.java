@@ -5,10 +5,6 @@ import java.net.SocketAddress;
 import java.nio.channels.*;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.Iterator;
-import java.util.concurrent.Executor;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
@@ -23,7 +19,7 @@ public class HttpServer {
     private AtomicInteger threadId = new AtomicInteger(1);
 
     private int port;
-    private Executor executor;
+    private NioEventLoopGroup workerGroup;
 
     public void list(int port) throws Exception {
         this.port = port;
@@ -37,14 +33,7 @@ public class HttpServer {
 
         LOG.info("server listen on port:" + this.port);
 
-        this.executor = new ThreadPoolExecutor(50, 50,
-                0L, TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<>(5000),
-                r -> {
-                    Thread thread = new Thread(r);
-                    thread.setName("http-worker" + threadId.addAndGet(1));
-                    return thread;
-                });
+        workerGroup = new NioEventLoopGroup(4);
 
         while (true) {
             int count = selector.select();
@@ -55,10 +44,11 @@ public class HttpServer {
                     if(selectionKey.isAcceptable()){
                         ServerSocketChannel serverSocketChannel1 = (ServerSocketChannel) selectionKey.channel();
                         SocketChannel  socketChannel = serverSocketChannel1.accept();
+                        socketChannel.configureBlocking(false);//Note
                         System.out.println(socketChannel.getRemoteAddress());
                         counter.incrementAndGet();
                         selectionKeyIterator.remove();
-                        executor.execute(new Task(socketChannel.socket()));
+                        workerGroup.register(socketChannel,SelectionKey.OP_READ);
                     }
 
                 }
