@@ -34,9 +34,9 @@ public class Handler implements Runnable {
 
     @Override
     public void run() {
-        ByteBuffer input = ByteBuffer.allocate(1024 * 8);
+        ByteBuffer buf = ByteBuffer.allocate(1024 * 8);
         try {
-            int localRead = socketChannel.read(input);
+            int localRead = socketChannel.read(buf);
             if (localRead == 0) {
                 return;
             }
@@ -46,7 +46,7 @@ public class Handler implements Runnable {
             }
 
             List outList = new ArrayList();
-            decode(input, outList);
+            decode(buf, outList);
 
             for (Object o : outList) {
                 channelRead(socketChannel, o);
