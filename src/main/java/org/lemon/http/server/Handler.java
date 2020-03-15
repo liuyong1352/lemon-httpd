@@ -21,21 +21,32 @@ public class Handler implements Runnable {
     final SocketChannel socketChannel;
     final SelectionKey sk;
 
+    ByteBuffer buf = ByteBuffer.allocate(1024 * 8);
+
     Handler(Selector sel, SocketChannel c)
             throws IOException {
         socketChannel = c;
+        /*socketChannel.socket().setReceiveBufferSize(1024);
+        int receiveBufferSize = socketChannel.socket().getReceiveBufferSize(); //65536
+        System.out.println(receiveBufferSize);*/
         c.configureBlocking(false);
         // Optionally try first read now
         sk = socketChannel.register(sel, 0);
         sk.attach(this);
         sk.interestOps(SelectionKey.OP_READ);
         sel.wakeup();//sel.select() is block ， so need wake up
+
     }
 
     @Override
     public void run() {
-        ByteBuffer buf = ByteBuffer.allocate(1024 * 8);
         try {
+            if(buf.position() != 0){
+                ByteBuffer buffer = ByteBuffer.allocate(1024 * 8);
+                buffer.put(buf);
+                buf.clear();
+                buf = buffer;
+            }
             int localRead = socketChannel.read(buf);
             if (localRead == 0) {
                 return;
@@ -46,11 +57,15 @@ public class Handler implements Runnable {
             }
 
             List outList = new ArrayList();
+            buf.flip();
             decode(buf, outList);
 
             for (Object o : outList) {
                 channelRead(socketChannel, o);
             }
+
+
+
             //process
             //write to channel
         } catch (Exception e) {
@@ -59,20 +74,35 @@ public class Handler implements Runnable {
     }
 
     private void decode(ByteBuffer buffer, List out) {
+        if(!buffer.hasRemaining()){
+            return;
+        }
 
-        buffer.flip();
         //消息格式为 4 字节长度 + string
         if (buffer.remaining() >= 4) {
             int len = buffer.getInt();
-            byte data[] = new byte[len];
-            buffer.get(data, 0, len);
-            out.add(new String(data, CharsetUtil.UTF_8));
+            if(buffer.remaining() < len){
+                System.out.println("TCP unpack!");
+                buffer.position(buffer.position() - 4);
+            } else if( buffer.remaining() > len) {
+                System.out.println("TCP sticky bag!");
+            }
+            if(buffer.remaining() >= len){
+                byte data[] = new byte[len];
+                buffer.get(data, 0, len);
+                out.add(new String(data, CharsetUtil.UTF_8));
+                decode(buffer,out);
+            }
         }
     }
 
     private void channelRead(SocketChannel socketChannel, Object obj) throws Exception {
-        System.out.println("request:" + obj);
-        socketChannel.write(ByteBuffer.wrap("by".getBytes(CharsetUtil.UTF_8)));
+        System.out.print("request:" + obj);
+        int n = socketChannel.write(ByteBuffer.wrap("bye!".getBytes(CharsetUtil.UTF_8)));
+        if(n == 0){
+            //已经发送不过去了
+            System.out.println("write fail:" + obj);
+        }
     }
 
     private void channelInactive(SocketChannel socketChannel) throws Exception {
@@ -82,6 +112,7 @@ public class Handler implements Runnable {
 
     private void catchException(Exception e) {
         LOG.info("catchException .... " + e.getMessage());
+        e.printStackTrace();
         close();
     }
 
