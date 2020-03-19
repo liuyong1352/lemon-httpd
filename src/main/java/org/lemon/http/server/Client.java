@@ -61,14 +61,22 @@ public class Client {
 
         int i = 0;
         while (i < 100000) {
-            int n = client.write("小明同学你好！loop:" + i + "\n");
+            client.write("小明同学你好！loop:" + i + "\n");
             i++;
-            System.out.println(n);
+            if(i % 100 == 0){
+                byte bytes[] = client.read();
+                System.out.println(new String(bytes,CharsetUtil.UTF_8));
+            }
             //client.read(); 不从tcp recive queue 读取数据 观察结果
         }
-        byte bytes[] = client.read();
-        System.out.println(new String(bytes,CharsetUtil.UTF_8));
 
+        synchronized (client){
+            try {
+                client.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         client.close(); //try do not close
     }
 }
