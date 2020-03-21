@@ -70,13 +70,13 @@ public class Client {
             //client.read(); 不从tcp recive queue 读取数据 观察结果
         }
 
-        synchronized (client){
+        /*synchronized (client){
             try {
                 client.wait();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        }
+        }*/
         client.close(); //try do not close
     }
 }
