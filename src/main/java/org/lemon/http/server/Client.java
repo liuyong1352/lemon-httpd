@@ -84,9 +84,10 @@ public class Client {
 
         int i = 0;
         while (i < 100000) {
-            client.write(Thread.currentThread().getName() + "小明同学你好！loop:" + i + "\n");
+            client.write(Thread.currentThread().getName() + " ------小明同学你好！loop:" + i + "\n");
             i++;
         }
+        client.write("bye bye end !");
         client.readByte(i);
         client.close(); //try do not close
     }
@@ -99,7 +100,7 @@ public class Client {
             String s = new String(data);
             System.out.print(new String(data));
             n++;
-            if(s.contains("99999")){
+            if(s.contains("bye bye end !")){
                 break;
             }
         }
