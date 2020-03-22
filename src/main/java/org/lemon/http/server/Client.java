@@ -14,7 +14,6 @@ import java.nio.channels.SocketChannel;
 public class Client {
 
     private SocketChannel socketChannel;
-    int recieveBytes = 0;
 
     public Client() throws IOException {
         socketChannel = SocketChannel.open();
@@ -56,7 +55,7 @@ public class Client {
     }
 
     public static void main(String args[]) throws Exception {
-        int n = 10;
+        int n = 20;
         Thread threads[] = new Thread[n];
 
         for(int i = 0 ; i < n ; i++){
@@ -84,7 +83,7 @@ public class Client {
 
         int i = 0;
         while (i < 100000) {
-            client.write(Thread.currentThread().getName() + " ------小明同学你好！loop:" + i + "\n");
+            client.write(Thread.currentThread().getName() + " ------Say hello to student Xiao Ming ！loop:" + i + "\n");
             i++;
         }
         client.write("bye bye end !");
