@@ -14,6 +14,7 @@ import java.nio.channels.SocketChannel;
 public class Client {
 
     private SocketChannel socketChannel;
+    int recieveBytes = 0;
 
     public Client() throws IOException {
         socketChannel = SocketChannel.open();
@@ -54,29 +55,53 @@ public class Client {
         socketChannel.close();
     }
 
-    public static void main(String args[]) throws IOException {
+    public static void main(String args[]) throws Exception {
+        int n = 10;
+        Thread threads[] = new Thread[n];
+
+        for(int i = 0 ; i < n ; i++){
+            Thread t ;
+            t = new Thread(()->{
+                try {
+                    body();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            threads[i] = t;
+            t.start();
+        }
+
+        for(Thread t : threads){
+            t.join();
+        }
+    }
+
+    public static void body() throws Exception{
         Client client = new Client();
 
         client.connect("localhost", 8080);
 
         int i = 0;
         while (i < 100000) {
-            client.write("小明同学你好！loop:" + i + "\n");
+            client.write(Thread.currentThread().getName() + "小明同学你好！loop:" + i + "\n");
             i++;
-            if(i % 100 == 0){
-                byte bytes[] = client.read();
-                System.out.println(new String(bytes,CharsetUtil.UTF_8));
-            }
-            //client.read(); 不从tcp recive queue 读取数据 观察结果
         }
-
-        /*synchronized (client){
-            try {
-                client.wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }*/
+        client.readByte(i);
         client.close(); //try do not close
+    }
+
+    public void readByte(int loop) throws IOException {
+        boolean f = true;
+        int n = 0 ;
+        while (f && (n < loop)){
+            byte[] data = read();
+            String s = new String(data);
+            System.out.print(new String(data));
+            n++;
+            if(s.contains("99999")){
+                break;
+            }
+        }
     }
 }

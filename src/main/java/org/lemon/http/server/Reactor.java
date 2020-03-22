@@ -14,7 +14,7 @@ import java.util.Set;
  * Created by bjliuyong on 2020/03/08.
  */
 public class Reactor implements Runnable {
-
+    Handler handler ;
     final Selector selector;
     final ServerSocketChannel serverSocket;
 
@@ -39,11 +39,22 @@ public class Reactor implements Runnable {
             while (!Thread.interrupted()){
                 /*System.out.println("current keys: " + selector.keys().size());
                 selector.select(1000L);*/
-                selector.select();
+                selector.select(10000L);
                 Set selected = selector.selectedKeys();
                 Iterator it = selected.iterator();
-                while (it.hasNext())
-                    dispatch((SelectionKey)(it.next()));
+                while (it.hasNext()) {
+                    SelectionKey k = (SelectionKey)it.next();
+                    NioChannelHandler nioChannelHandler = (NioChannelHandler)k.attachment();
+
+                    int readyOps = k.readyOps();
+                    if((readyOps & SelectionKey.OP_WRITE) != 0){
+                        nioChannelHandler.onWritable();
+                    }
+                    if ((readyOps & (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0 || readyOps == 0) {
+                        nioChannelHandler.onRead();
+                    }
+                }
+
                 selected.clear();
             }
 
@@ -52,19 +63,14 @@ public class Reactor implements Runnable {
         }
     }
 
-    void dispatch(SelectionKey k){
-        Runnable r = (Runnable)(k.attachment());
-        r.run();
-    }
-
-    class Acceptor implements Runnable{
+    class Acceptor implements NioChannelHandler{
         @Override
-        public void run() {
+        public void onRead() {
             SocketChannel c;
             try {
                 c = serverSocket.accept();
                 if (c != null)
-                    new Handler(selector, c);
+                    handler = new Handler(selector, c);
             } catch (IOException e) {
                 e.printStackTrace();
             }

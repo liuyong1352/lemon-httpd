@@ -8,20 +8,24 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 
 /**
  * Created by bjliuyong on 2020/03/08.
  */
-public class Handler implements Runnable {
+public class Handler implements NioChannelHandler {
 
     public static Logger LOG = Logger.getAnonymousLogger();
 
     final SocketChannel socketChannel;
     final SelectionKey sk;
+    int sendBytes = 0;
 
     ByteBuffer buf = ByteBuffer.allocate(1024 * 8);
+
+    LinkedList<ByteBuffer> outboundBuffer = new LinkedList();
 
 
     Handler(Selector sel, SocketChannel c)
@@ -40,7 +44,7 @@ public class Handler implements Runnable {
     }
 
     @Override
-    public void run() {
+    public void onRead() {
         try {
             if(buf.position() != 0){
                 ByteBuffer buffer = ByteBuffer.allocate(1024 * 8);
@@ -74,6 +78,25 @@ public class Handler implements Runnable {
         }
     }
 
+    @Override
+    public void onWritable(){
+        try {
+            ByteBuffer buf;
+            while (!outboundBuffer.isEmpty()){
+                buf = outboundBuffer.removeFirst();
+                if(wirte(buf)){
+                    continue;
+                }
+                break;
+            }
+            if(outboundBuffer.isEmpty()){
+                clearOpWrite();
+            }
+        } catch (IOException e){
+            catchException(e);
+        }
+    }
+
     private void decode(ByteBuffer buffer, List out) {
         if(!buffer.hasRemaining()){
             return;
@@ -87,22 +110,62 @@ public class Handler implements Runnable {
                 buffer.position(buffer.position() - 4);
             } else if( buffer.remaining() > len) {
                 System.out.println("TCP sticky bag!");
-            }
-            if(buffer.remaining() >= len){
+                if(len <= 0){
+                    System.out.println("TCP len -1");
+                }
                 byte data[] = new byte[len];
                 buffer.get(data, 0, len);
                 out.add(new String(data, CharsetUtil.UTF_8));
                 decode(buffer,out);
+            } else {
+                System.out.println("--------");
+                byte data[] = new byte[len];
+                buffer.get(data, 0, len);
+                out.add(new String(data, CharsetUtil.UTF_8));
             }
         }
     }
 
-    private void channelRead(SocketChannel socketChannel, Object obj) throws Exception {
+    private void channelRead(SocketChannel socketChannel, Object obj) throws IOException {
         System.out.print("request:" + obj);
-        int n = socketChannel.write(ByteBuffer.wrap("bye!".getBytes(CharsetUtil.UTF_8)));
-        if(n == 0){
-            //已经发送不过去了
-            System.out.println("write fail:" + obj);
+        //biz handler
+        ByteBuffer buf = ByteBuffer.wrap(("response:" + obj).getBytes(CharsetUtil.UTF_8));
+        wirte(buf);
+    }
+
+    private boolean wirte(ByteBuffer buf) throws IOException{
+        int len = buf.remaining();
+        int n = socketChannel.write(buf);
+        if(n != len){
+            //setOpWrite
+            incompleteWrite(buf);
+            return false;
+        }
+        return true;
+    }
+
+    private void incompleteWrite(ByteBuffer buf) {
+        outboundBuffer.addLast(buf);
+        setOpWrite();
+    }
+
+    private void setOpWrite(){
+        if (!sk.isValid()) {
+            return;
+        }
+        final int interestOps = sk.interestOps();
+        if ((interestOps & SelectionKey.OP_WRITE) == 0) {
+            sk.interestOps(interestOps | SelectionKey.OP_WRITE);
+        }
+    }
+
+    private void clearOpWrite(){
+        if (!sk.isValid()) {
+            return;
+        }
+        final int interestOps = sk.interestOps();
+        if ((interestOps & SelectionKey.OP_WRITE) != 0) {
+            sk.interestOps(interestOps & ~SelectionKey.OP_WRITE);
         }
     }
 
