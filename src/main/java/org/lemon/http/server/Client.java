@@ -35,6 +35,21 @@ public class Client {
         return socketChannel.write(byteBuffer);
     }
 
+    public String readString() throws IOException {
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
+        int n = socketChannel.read(buffer);
+        buffer.flip();
+        byte data[];
+        if (buffer.hasArray()) {
+            data = buffer.array();
+        } else {
+            data = new byte[n];
+            buffer.get(data, 0, n);
+        }
+        return new String(data, 0, n, CharsetUtil.UTF_8);
+    }
+
+
     public byte[] read() throws IOException {
         ByteBuffer buffer = ByteBuffer.allocate(1024);
         int n = socketChannel.read(buffer);
@@ -48,9 +63,15 @@ public class Client {
         }
     }
 
-    public void close() throws IOException {
-        socketChannel.shutdownInput();
+    public void shutDownOutput() throws IOException {
         socketChannel.shutdownOutput();
+    }
+
+    public void shutdownInput() throws IOException {
+        socketChannel.shutdownInput();
+    }
+
+    public void close() throws IOException {
         socketChannel.close();
     }
 
@@ -58,9 +79,9 @@ public class Client {
         int n = 20;
         Thread threads[] = new Thread[n];
 
-        for(int i = 0 ; i < n ; i++){
-            Thread t ;
-            t = new Thread(()->{
+        for (int i = 0; i < n; i++) {
+            Thread t;
+            t = new Thread(() -> {
                 try {
                     body();
                 } catch (Exception e) {
@@ -71,35 +92,37 @@ public class Client {
             t.start();
         }
 
-        for(Thread t : threads){
+        for (Thread t : threads) {
             t.join();
         }
     }
 
-    public static void body() throws Exception{
+    public static void body() throws Exception {
         Client client = new Client();
-
         client.connect("localhost", 8080);
 
+        int loop = 2;//100000
         int i = 0;
-        while (i < 100000) {
-            client.write(Thread.currentThread().getName() + " ------Say hello to student Xiao Ming ！loop:" + i + "\n");
+        String threadName = Thread.currentThread().getName();
+        while (i < loop) {
+            client.write(threadName + " ------Say hello to student Xiao Ming ！loop:" + i + "\n");
             i++;
         }
-        client.write("bye bye end !");
+        client.write(threadName + "bye bye end !");
+        client.shutDownOutput();
         client.readByte(i);
-        client.close(); //try do not close
+        client.shutdownInput();
+        //client.close(); //try do not close
     }
 
     public void readByte(int loop) throws IOException {
         boolean f = true;
-        int n = 0 ;
-        while (f && (n < loop)){
-            byte[] data = read();
-            String s = new String(data);
-            System.out.print(new String(data));
+        int n = 0;
+        while (f && (n < loop)) {
+            String s = readString();
             n++;
-            if(s.contains("bye bye end !")){
+            if (s.contains("bye bye end !")) {
+                System.out.println(s);
                 break;
             }
         }

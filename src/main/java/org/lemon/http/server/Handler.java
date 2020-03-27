@@ -182,8 +182,8 @@ public class Handler implements NioChannelHandler {
 
     private void close() {
         try {
-            socketChannel.shutdownInput();
-            socketChannel.shutdownOutput();
+            //socketChannel.shutdownInput();
+            //socketChannel.shutdownOutput();
             socketChannel.close();
         } catch (IOException e){
             e.printStackTrace();
