@@ -76,7 +76,7 @@ public class Client {
     }
 
     public static void main(String args[]) throws Exception {
-        int n = 20;
+        int n = 2;
         Thread threads[] = new Thread[n];
 
         for (int i = 0; i < n; i++) {
@@ -101,7 +101,7 @@ public class Client {
         Client client = new Client();
         client.connect("localhost", 8080);
 
-        int loop = 2;//100000
+        int loop = 1;//100000
         int i = 0;
         String threadName = Thread.currentThread().getName();
         while (i < loop) {
@@ -109,10 +109,10 @@ public class Client {
             i++;
         }
         client.write(threadName + "bye bye end !");
-        client.shutDownOutput();
-        client.readByte(i);
-        client.shutdownInput();
-        //client.close(); //try do not close
+        //client.shutDownOutput();
+        client.readByte(1);
+        //client.shutdownInput();
+        client.close(); //try do not close
     }
 
     public void readByte(int loop) throws IOException {
@@ -120,9 +120,10 @@ public class Client {
         int n = 0;
         while (f && (n < loop)) {
             String s = readString();
+            System.out.println(s);
             n++;
             if (s.contains("bye bye end !")) {
-                System.out.println(s);
+                //System.out.println(s);
                 break;
             }
         }

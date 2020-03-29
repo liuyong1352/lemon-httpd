@@ -52,6 +52,7 @@ public class Handler implements NioChannelHandler {
                 buf.clear();
                 buf = buffer;
             }
+
             int localRead = socketChannel.read(buf);
             if (localRead == 0) {
                 return;
@@ -118,7 +119,7 @@ public class Handler implements NioChannelHandler {
                 out.add(new String(data, CharsetUtil.UTF_8));
                 decode(buffer,out);
             } else {
-                System.out.println("--------");
+                //System.out.println("--------");
                 byte data[] = new byte[len];
                 buffer.get(data, 0, len);
                 out.add(new String(data, CharsetUtil.UTF_8));
@@ -170,20 +171,20 @@ public class Handler implements NioChannelHandler {
     }
 
     private void channelInactive(SocketChannel socketChannel) throws Exception {
-        LOG.info("channelInactive .... " + socketChannel.getRemoteAddress());
+        LOG.info("channelInactive .... " + connectionToString());
         close();
     }
 
-    private void catchException(Exception e) {
-        LOG.info("catchException .... " + e.getMessage());
+    private void catchException(Exception e){
+        LOG.info("catchException .... " + connectionToString());
         e.printStackTrace();
         close();
     }
 
     private void close() {
         try {
-            //socketChannel.shutdownInput();
-            //socketChannel.shutdownOutput();
+            /*socketChannel.shutdownInput();
+            socketChannel.shutdownOutput();*/
             socketChannel.close();
         } catch (IOException e){
             e.printStackTrace();
@@ -195,5 +196,13 @@ public class Handler implements NioChannelHandler {
             }
         }
 
+    }
+
+    private String connectionToString() {
+        try {
+            return socketChannel.getLocalAddress().toString() + "---->" +  socketChannel.getRemoteAddress().toString();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
