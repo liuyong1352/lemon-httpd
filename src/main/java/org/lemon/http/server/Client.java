@@ -76,7 +76,7 @@ public class Client {
     }
 
     public static void main(String args[]) throws Exception {
-        int n = 2;
+        int n = 1;
         Thread threads[] = new Thread[n];
 
         for (int i = 0; i < n; i++) {
@@ -108,7 +108,7 @@ public class Client {
             client.write(threadName + " ------Say hello to student Xiao Ming ！loop:" + i + "\n");
             i++;
         }
-        client.write(threadName + "bye bye end !");
+        client.write(threadName + "bye bye end !\n");
         //client.shutDownOutput();
         client.readByte(1);
         //client.shutdownInput();

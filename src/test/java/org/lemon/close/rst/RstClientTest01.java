@@ -15,8 +15,9 @@ public class RstClientTest01 {
         InetSocketAddress inetSocketAddress = new InetSocketAddress(inetAddr, 8888);
         client.connect(inetSocketAddress);
 
-
-        byte[] datas = new byte[1024 + 4];
+        int size = 1024;
+        //int size = 1024 + 4;
+        byte[] datas = new byte[size];
         client.getOutputStream().write(datas);
         TimeUnit.SECONDS.sleep(10000);
         client.close();

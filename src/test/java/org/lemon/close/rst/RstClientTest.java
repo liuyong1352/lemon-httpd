@@ -16,9 +16,9 @@ public class RstClientTest {
         client.connect(inetSocketAddress);
 
 
-        byte[] datas = new byte[1024 + 4];
+        byte[] datas = new byte[1024+4];
         client.getOutputStream().write(datas);
-        TimeUnit.SECONDS.sleep(10000);
+        TimeUnit.SECONDS.sleep(1);
         client.close();
         System.out.println("Close !");
 
