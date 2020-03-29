@@ -1,10 +1,3 @@
-### tcpdump
-
-使用tcpdump -S -i lo port 8080 观察
-
-使用curl 发起POST请求：
-curl -v http://127.0.0.1:8080 -d 'hi httpd'
-
 开发机-台式电脑压测
 
 tps = 73520.0

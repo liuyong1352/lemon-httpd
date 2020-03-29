@@ -24,7 +24,7 @@ public class ClientTest02 {
         client.connect(inetSocketAddress);
         //client.connect(new InetSocketAddress("localhost", 8888));
         TimeUnit.SECONDS.sleep(2);
-
+        client.shutdownInput();
         int count = 0 ;
         while (true){
             count ++;
