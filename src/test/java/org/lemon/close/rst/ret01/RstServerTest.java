@@ -1,4 +1,4 @@
-package org.lemon.close.rst;
+package org.lemon.close.rst.ret01;
 
 
 import java.net.ServerSocket;
@@ -19,9 +19,11 @@ public class RstServerTest {
             Socket client = server.accept();
             System.out.println("Accept Connection.... " + client.getLocalAddress() + ":" + client.getRemoteSocketAddress());
 
-            TimeUnit.SECONDS.sleep(3);
+            client.getOutputStream().write("Hello".getBytes());
+            TimeUnit.SECONDS.sleep(5);
             byte[] bytes = new byte[1024];
             int n = client.getInputStream().read(bytes);
+            n = client.getInputStream().read();
             System.out.println(new String(bytes, 0, n));
             client.getOutputStream().write("hi".getBytes());
             //client.getInputStream().read(bytes);//如果将tcp 接收队列里面数据全部读取 close 就发送fin ,否则发送rst
