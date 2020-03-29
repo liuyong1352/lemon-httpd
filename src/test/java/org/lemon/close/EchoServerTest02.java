@@ -1,9 +1,6 @@
 package org.lemon.close;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.TimeUnit;
@@ -23,8 +20,12 @@ public class EchoServerTest02 {
             //System.out.println("Shut down Input Stream！");
             client.shutdownOutput();
             System.out.println("Shut down Output Stream！");
-            while (true){
-                TimeUnit.SECONDS.sleep(10);
+            TimeUnit.SECONDS.sleep(3);
+            while (true) {
+
+                byte[] bytes = new byte[1024];
+                int n = client.getInputStream().read(bytes);
+                System.out.println(new String(bytes, 0, n));
             }
 
         }
