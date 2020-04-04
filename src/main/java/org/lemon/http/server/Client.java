@@ -17,7 +17,7 @@ public class Client {
 
     public Client() throws IOException {
         socketChannel = SocketChannel.open();
-        /*socketChannel.socket().setReceiveBufferSize(1024);
+        /*c.socket().setReceiveBufferSize(1024);
         int receiveBufferSize = socketChannel.socket().getReceiveBufferSize(); //65536
         System.out.println(receiveBufferSize);*/
     }
@@ -50,33 +50,21 @@ public class Client {
     }
 
 
-    public byte[] read() throws IOException {
-        ByteBuffer buffer = ByteBuffer.allocate(1024);
-        int n = socketChannel.read(buffer);
-        buffer.flip();
-        if (buffer.hasArray()) {
-            return buffer.array();
-        } else {
-            byte data[] = new byte[n];
-            buffer.get(data, 0, n);
-            return data;
-        }
-    }
-
-    public void shutDownOutput() throws IOException {
-        socketChannel.shutdownOutput();
-    }
-
-    public void shutdownInput() throws IOException {
-        socketChannel.shutdownInput();
-    }
-
     public void close() throws IOException {
         socketChannel.close();
     }
 
     public static void main(String args[]) throws Exception {
-        int n = 1;
+        int n = 2;
+        while (n > 0) {
+            test();
+            n--;
+            System.out.println("###########################" + n);
+        }
+    }
+
+    public static void test() throws Exception{
+        int n = 30;
         Thread threads[] = new Thread[n];
 
         for (int i = 0; i < n; i++) {
@@ -101,17 +89,15 @@ public class Client {
         Client client = new Client();
         client.connect("localhost", 8080);
 
-        int loop = 1;//100000
+        int loop = 1000;//100000
         int i = 0;
         String threadName = Thread.currentThread().getName();
         while (i < loop) {
             client.write(threadName + " ------Say hello to student Xiao Ming ！loop:" + i + "\n");
             i++;
         }
-        client.write(threadName + "bye bye end !\n");
-        //client.shutDownOutput();
-        client.readByte(1);
-        //client.shutdownInput();
+        client.write(threadName + "#");
+        client.readByte(loop + 10);
         client.close(); //try do not close
     }
 
@@ -120,10 +106,9 @@ public class Client {
         int n = 0;
         while (f && (n < loop)) {
             String s = readString();
-            System.out.println(s);
             n++;
-            if (s.contains("bye bye end !")) {
-                //System.out.println(s);
+            if (s.contains("#")) {
+                System.out.println(s);
                 break;
             }
         }

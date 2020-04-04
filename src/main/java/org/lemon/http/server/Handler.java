@@ -81,8 +81,8 @@ public class Handler implements NioChannelHandler {
 
     @Override
     public void onWritable(){
+        ByteBuffer buf;
         try {
-            ByteBuffer buf;
             while (!outboundBuffer.isEmpty()){
                 buf = outboundBuffer.removeFirst();
                 if(wirte(buf)){
@@ -202,7 +202,8 @@ public class Handler implements NioChannelHandler {
         try {
             return socketChannel.getLocalAddress().toString() + "---->" +  socketChannel.getRemoteAddress().toString();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            return "";
         }
     }
 }
