@@ -16,13 +16,13 @@ public class RstClientTest {
         client.connect(inetSocketAddress);
 
 
-        byte[] datas = new byte[1024+4];
-        client.getOutputStream().write(datas);
-        TimeUnit.SECONDS.sleep(10);
+        byte[] datas = new byte[4];
         int n = client.getInputStream().read(datas);
         System.out.println("read n : " + n);
         System.out.println(new String(datas,0,n));
-        client.getOutputStream().write("bye".getBytes());
+
+
+        client.getOutputStream().write("bye!".getBytes());
         client.close();
         System.out.println("Close !");
 
