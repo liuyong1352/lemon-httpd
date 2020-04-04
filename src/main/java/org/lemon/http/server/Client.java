@@ -38,6 +38,7 @@ public class Client {
     public String readString() throws IOException {
         ByteBuffer buffer = ByteBuffer.allocate(1024);
         int n = socketChannel.read(buffer);
+
         buffer.flip();
         byte data[];
         if (buffer.hasArray()) {
@@ -55,7 +56,7 @@ public class Client {
     }
 
     public static void main(String args[]) throws Exception {
-        int n = 2;
+        int n = 1000;
         while (n > 0) {
             test();
             n--;
@@ -64,7 +65,7 @@ public class Client {
     }
 
     public static void test() throws Exception{
-        int n = 30;
+        int n = 10;
         Thread threads[] = new Thread[n];
 
         for (int i = 0; i < n; i++) {
@@ -72,6 +73,7 @@ public class Client {
             t = new Thread(() -> {
                 try {
                     body();
+                    //Thread.sleep(1000);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -93,11 +95,11 @@ public class Client {
         int i = 0;
         String threadName = Thread.currentThread().getName();
         while (i < loop) {
-            client.write(threadName + " ------Say hello to student Xiao Ming ！loop:" + i + "\n");
+            client.write(threadName + "Say hello to student Xiao Ming ! loop:" + i + "\n");
             i++;
         }
         client.write(threadName + "#");
-        client.readByte(loop + 10);
+        client.readByte(loop + 10000000);
         client.close(); //try do not close
     }
 

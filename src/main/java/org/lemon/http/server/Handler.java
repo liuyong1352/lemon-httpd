@@ -85,7 +85,7 @@ public class Handler implements NioChannelHandler {
         try {
             while (!outboundBuffer.isEmpty()){
                 buf = outboundBuffer.removeFirst();
-                if(wirte(buf)){
+                if(write(buf)){
                     continue;
                 }
                 break;
@@ -128,13 +128,13 @@ public class Handler implements NioChannelHandler {
     }
 
     private void channelRead(SocketChannel socketChannel, Object obj) throws IOException {
-        System.out.print("request:" + obj);
+        //System.out.print("request:" + obj);
         //biz handler
         ByteBuffer buf = ByteBuffer.wrap(("response:" + obj).getBytes(CharsetUtil.UTF_8));
-        wirte(buf);
+        write(buf);
     }
 
-    private boolean wirte(ByteBuffer buf) throws IOException{
+    private boolean write(ByteBuffer buf) throws IOException{
         int len = buf.remaining();
         int n = socketChannel.write(buf);
         if(n != len){
