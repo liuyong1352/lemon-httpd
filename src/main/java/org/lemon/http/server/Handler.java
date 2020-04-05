@@ -1,11 +1,10 @@
 package org.lemon.http.server;
 
 import io.netty.util.CharsetUtil;
+import org.lemon.http.server.channel.IOChannel;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -19,34 +18,22 @@ public class Handler implements NioChannelHandler {
 
     public static Logger LOG = Logger.getAnonymousLogger();
 
-    final SocketChannel socketChannel;
-    final SelectionKey sk;
-    int sendBytes = 0;
 
     ByteBuffer buf = ByteBuffer.allocate(1024 * 8);
 
     LinkedList<ByteBuffer> outboundBuffer = new LinkedList();
 
+    IOChannel ioChannel;
 
-    Handler(Selector sel, SocketChannel c)
-            throws IOException {
-        socketChannel = c;
-        /*socketChannel.socket().setReceiveBufferSize(1024);
-        int receiveBufferSize = socketChannel.socket().getReceiveBufferSize(); //65536
-        System.out.println(receiveBufferSize);*/
-        c.configureBlocking(false);
-        // Optionally try first read now
-        sk = socketChannel.register(sel, 0);
-        sk.attach(this);
-        sk.interestOps(SelectionKey.OP_READ);
-        sel.wakeup();//sel.select() is block ， so need wake up
-
+    public Handler(IOChannel ioChannel) {
+        this.ioChannel = ioChannel;
     }
 
     @Override
-    public void onRead() {
+    public void onRead(IOChannel ioChannel) {
+        SocketChannel socketChannel = (SocketChannel) ioChannel.getJavaChannel();
         try {
-            if(buf.position() != 0){
+            if (buf.position() != 0) {
                 ByteBuffer buffer = ByteBuffer.allocate(1024 * 8);
                 buffer.put(buf);
                 buf.clear();
@@ -71,7 +58,6 @@ public class Handler implements NioChannelHandler {
             }
 
 
-
             //process
             //write to channel
         } catch (Exception e) {
@@ -80,44 +66,44 @@ public class Handler implements NioChannelHandler {
     }
 
     @Override
-    public void onWritable(){
+    public void onWritable(IOChannel ioChannel) {
         ByteBuffer buf;
         try {
-            while (!outboundBuffer.isEmpty()){
+            while (!outboundBuffer.isEmpty()) {
                 buf = outboundBuffer.removeFirst();
-                if(write(buf)){
+                if (write(buf)) {
                     continue;
                 }
                 break;
             }
-            if(outboundBuffer.isEmpty()){
-                clearOpWrite();
+            if (outboundBuffer.isEmpty()) {
+                ioChannel.clearOpWrite();
             }
-        } catch (IOException e){
+        } catch (IOException e) {
             catchException(e);
         }
     }
 
     private void decode(ByteBuffer buffer, List out) {
-        if(!buffer.hasRemaining()){
+        if (!buffer.hasRemaining()) {
             return;
         }
 
         //消息格式为 4 字节长度 + string
         if (buffer.remaining() >= 4) {
             int len = buffer.getInt();
-            if(buffer.remaining() < len){
+            if (buffer.remaining() < len) {
                 System.out.println("TCP unpack!");
                 buffer.position(buffer.position() - 4);
-            } else if( buffer.remaining() > len) {
+            } else if (buffer.remaining() > len) {
                 System.out.println("TCP sticky bag!");
-                if(len <= 0){
+                if (len <= 0) {
                     System.out.println("TCP len -1");
                 }
                 byte data[] = new byte[len];
                 buffer.get(data, 0, len);
                 out.add(new String(data, CharsetUtil.UTF_8));
-                decode(buffer,out);
+                decode(buffer, out);
             } else {
                 //System.out.println("--------");
                 byte data[] = new byte[len];
@@ -134,10 +120,10 @@ public class Handler implements NioChannelHandler {
         write(buf);
     }
 
-    private boolean write(ByteBuffer buf) throws IOException{
+    private boolean write(ByteBuffer buf) throws IOException {
         int len = buf.remaining();
-        int n = socketChannel.write(buf);
-        if(n != len){
+        int n = ioChannel.write(buf);
+        if (n != len) {
             //setOpWrite
             incompleteWrite(buf);
             return false;
@@ -147,63 +133,20 @@ public class Handler implements NioChannelHandler {
 
     private void incompleteWrite(ByteBuffer buf) {
         outboundBuffer.addLast(buf);
-        setOpWrite();
+        ioChannel.setOpWrite();
     }
 
-    private void setOpWrite(){
-        if (!sk.isValid()) {
-            return;
-        }
-        final int interestOps = sk.interestOps();
-        if ((interestOps & SelectionKey.OP_WRITE) == 0) {
-            sk.interestOps(interestOps | SelectionKey.OP_WRITE);
-        }
-    }
-
-    private void clearOpWrite(){
-        if (!sk.isValid()) {
-            return;
-        }
-        final int interestOps = sk.interestOps();
-        if ((interestOps & SelectionKey.OP_WRITE) != 0) {
-            sk.interestOps(interestOps & ~SelectionKey.OP_WRITE);
-        }
-    }
 
     private void channelInactive(SocketChannel socketChannel) throws Exception {
-        LOG.info("channelInactive .... " + connectionToString());
-        close();
+        LOG.info("channelInactive .... " + ioChannel.connectionToString());
+        ioChannel.close();
     }
 
-    private void catchException(Exception e){
-        LOG.info("catchException .... " + connectionToString());
+    private void catchException(Exception e) {
+        LOG.info("catchException .... " + ioChannel.connectionToString());
         e.printStackTrace();
-        close();
+        ioChannel.close();
     }
 
-    private void close() {
-        try {
-            /*socketChannel.shutdownInput();
-            socketChannel.shutdownOutput();*/
-            socketChannel.close();
-        } catch (IOException e){
-            e.printStackTrace();
-        } finally {
-            try {
-                socketChannel.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
 
-    }
-
-    private String connectionToString() {
-        try {
-            return socketChannel.getLocalAddress().toString() + "---->" +  socketChannel.getRemoteAddress().toString();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "";
-        }
-    }
 }

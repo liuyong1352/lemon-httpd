@@ -1,11 +1,11 @@
 package org.lemon.http.server;
 
+
+import org.lemon.http.server.channel.IOChannel;
+
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.Iterator;
 import java.util.Set;
@@ -14,44 +14,43 @@ import java.util.Set;
  * Created by bjliuyong on 2020/03/08.
  */
 public class Reactor implements Runnable {
-    Handler handler ;
     final Selector selector;
-    final ServerSocketChannel serverSocket;
 
     SelectorProvider provider = SelectorProvider.provider();
+    Thread worker;
 
-    Reactor(int port) throws IOException {
+    Reactor() throws IOException {
         selector = provider.openSelector();
-        serverSocket = provider.openServerSocketChannel();
-        serverSocket.socket().bind(new InetSocketAddress(port));
-        serverSocket.configureBlocking(false);
-        SelectionKey sk = serverSocket.register(selector, SelectionKey.OP_ACCEPT);
-        sk.attach(new Acceptor());
         Thread t = new Thread(this);
         t.setDaemon(false);
-        t.start();
-
+        worker = t;
+        worker.start();
     }
+
+    public void register(IOChannel ioChannel) throws IOException {
+        ioChannel.register(selector);
+    }
+
 
     @Override
     public void run() {
         try {
-            while (!Thread.interrupted()){
+            while (!Thread.interrupted()) {
                 /*System.out.println("current keys: " + selector.keys().size());
                 selector.select(1000L);*/
                 selector.select(2000L);
                 Set selected = selector.selectedKeys();
                 Iterator it = selected.iterator();
                 while (it.hasNext()) {
-                    SelectionKey k = (SelectionKey)it.next();
-                    NioChannelHandler nioChannelHandler = (NioChannelHandler)k.attachment();
+                    SelectionKey k = (SelectionKey) it.next();
+                    IOChannel ioChannel = (IOChannel) k.attachment();
 
                     int readyOps = k.readyOps();
-                    if((readyOps & SelectionKey.OP_WRITE) != 0){
-                        nioChannelHandler.onWritable();
+                    if ((readyOps & SelectionKey.OP_WRITE) != 0) {
+                        ioChannel.getNioChannelHandler().onWritable(ioChannel);
                     }
                     if ((readyOps & (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0 || readyOps == 0) {
-                        nioChannelHandler.onRead();
+                        ioChannel.getNioChannelHandler().onRead(ioChannel);
                     }
                 }
 
@@ -63,17 +62,5 @@ public class Reactor implements Runnable {
         }
     }
 
-    class Acceptor implements NioChannelHandler{
-        @Override
-        public void onRead() {
-            SocketChannel c;
-            try {
-                c = serverSocket.accept();
-                if (c != null)
-                    handler = new Handler(selector, c);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+
 }

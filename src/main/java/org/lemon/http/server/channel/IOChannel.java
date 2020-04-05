@@ -1,0 +1,102 @@
+package org.lemon.http.server.channel;
+
+import org.lemon.http.server.NioChannelHandler;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectableChannel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
+
+public abstract class IOChannel {
+
+    protected SelectableChannel javaChannel;
+    protected NioChannelHandler nioChannelHandler;
+    protected int port;
+    protected SelectionKey sk;
+
+    protected int interestOps = SelectionKey.OP_READ;
+
+
+    public void register(Selector selector) throws IOException {
+        javaChannel.configureBlocking(false);
+        // Optionally try first read now
+        sk = javaChannel.register(selector, 0);
+        sk.attach(this);
+        sk.interestOps(interestOps);
+        selector.wakeup();//sel.select() is block ， so need wake up
+    }
+
+    public void bind(int port) throws IOException {
+
+    }
+
+    public void setIOHandler(NioChannelHandler nioChannelHandler) {
+        this.nioChannelHandler = nioChannelHandler;
+    }
+
+    public NioChannelHandler getNioChannelHandler() {
+        return nioChannelHandler;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    public void setJavaChannel(SelectableChannel javaChannel) {
+        this.javaChannel = javaChannel;
+    }
+
+    public SelectableChannel getJavaChannel() {
+        return javaChannel;
+    }
+
+    public int write(ByteBuffer buffer) throws IOException {
+        return ((SocketChannel) javaChannel).write(buffer);
+    }
+
+
+    public void setOpWrite() {
+        if (!sk.isValid()) {
+            return;
+        }
+        final int interestOps = sk.interestOps();
+        if ((interestOps & SelectionKey.OP_WRITE) == 0) {
+            sk.interestOps(interestOps | SelectionKey.OP_WRITE);
+        }
+    }
+
+    public void clearOpWrite() {
+        if (!sk.isValid()) {
+            return;
+        }
+        final int interestOps = sk.interestOps();
+        if ((interestOps & SelectionKey.OP_WRITE) != 0) {
+            sk.interestOps(interestOps & ~SelectionKey.OP_WRITE);
+        }
+    }
+
+    public void close() {
+        try {
+            /*socketChannel.shutdownInput();
+            socketChannel.shutdownOutput();*/
+            javaChannel.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public String connectionToString() {
+        try {
+
+            return ((SocketChannel) javaChannel).getLocalAddress().toString() + "---->"
+                    + ((SocketChannel) javaChannel).getRemoteAddress().toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+}
