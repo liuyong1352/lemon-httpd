@@ -2,6 +2,8 @@
 
 #### http1.0.1.3-将Client改成Nio ,抽象出解码编码
 
+1. 将Client修改成Nio
+2. 抽象出编解码
 
 #### http1.0.1.2-修改Client端进行多线程测试
 
