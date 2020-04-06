@@ -7,38 +7,55 @@ import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.spi.SelectorProvider;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by bjliuyong on 2020/03/08.
  */
-public class Reactor implements Runnable {
+public class Reactor implements Runnable, Executor {
     final Selector selector;
 
     SelectorProvider provider = SelectorProvider.provider();
     Thread worker;
 
-    Reactor(String threadName) throws IOException {
+    private LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue();
+    protected AtomicBoolean started = new AtomicBoolean(false);
+
+    Reactor() throws IOException {
         selector = provider.openSelector();
-        Thread t = new Thread(this);
-        t.setDaemon(false);
-        t.setName("Reactor-" + threadName);
-        worker = t;
-        worker.start();
     }
 
-    public void register(IOChannel ioChannel) throws IOException {
-        ioChannel.register(selector);
+    public void register(IOChannel ioChannel) {
+        execute(() -> {
+            try {
+                ioChannel.register(selector);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
     }
 
 
     @Override
     public void run() {
         try {
-            while (!Thread.interrupted()) {
+            while (started.get()) {
                 /*System.out.println("current keys: " + selector.keys().size());
                 selector.select(1000L);*/
+                if (!queue.isEmpty()) {
+                    int size = queue.size();
+                    ArrayList<Runnable> runnables = new ArrayList<>(size);
+                    queue.drainTo(runnables, size);
+                    for (Runnable task : runnables) {
+                        task.run();
+                    }
+                }
                 selector.select(2000L);
                 Set selected = selector.selectedKeys();
                 Iterator it = selected.iterator();
@@ -64,4 +81,20 @@ public class Reactor implements Runnable {
     }
 
 
+    @Override
+    public void execute(Runnable command) {
+        queue.add(command);
+
+        if (!started.get()) {
+            synchronized (this) {
+                Thread t = new Thread(this);
+                t.setDaemon(false);
+                t.setName("Reactor");
+                worker = t;
+                worker.start();
+                started.set(true);
+            }
+        }
+        selector.wakeup();
+    }
 }

@@ -59,7 +59,7 @@ public class Server {
         }
         Server server = new Server();
         ReactorGroup boss = new ReactorGroup(1);
-        ReactorGroup workers = new ReactorGroup(1);
+        ReactorGroup workers = new ReactorGroup(8);
         //server.reactor(boss, boss);
         server.reactor(boss, workers);
         server.setPort(port);

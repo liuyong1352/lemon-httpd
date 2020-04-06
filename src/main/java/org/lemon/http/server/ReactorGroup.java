@@ -10,7 +10,7 @@ public class ReactorGroup {
     public ReactorGroup(int nReactor) throws IOException {
         reactors = new Reactor[nReactor];
         for (int i = 0; i < nReactor; i++) {
-            reactors[i] = new Reactor("-" + i);
+            reactors[i] = new Reactor();
         }
     }
 

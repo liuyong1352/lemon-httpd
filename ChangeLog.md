@@ -1,5 +1,9 @@
 ## 本次修改内容
 
+#### http1.0.1.5-解决register性能问题
+
+通过异步任务解决
+
 #### http1.0.1.4-将Server端修改成MutilReactor,遇到register性能问题
 
 1. register方法,如果存在线程切换性能严重下降，内部使用了lock
