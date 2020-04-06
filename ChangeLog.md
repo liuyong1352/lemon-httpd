@@ -1,6 +1,6 @@
 ## 本次修改内容
 
-#### http1.0.1.3-将Server端修改成MutilReactor
+#### http1.0.1.4-将Server端修改成MutilReactor,遇到register性能问题
 
 1. register方法,如果存在线程切换性能严重下降，内部使用了lock
 
@@ -8,6 +8,9 @@ SelectorImpl.lockAndDoSelect synchronized(this.publicKeys) 与
 SelectorImpl.register(SelectorImpl.java:132)  synchronized(this.publicKeys) {this.implRegister(var4);}
 
 存在锁竞争,doselect 又属于阻塞操作，所以新的连接注册就会需要一直等待锁释放
+
+#### http1.0.1.3-将Server端修改成MutilReactor
+
 
 #### http1.0.1.2-修改Client端进行多线程测试
 
