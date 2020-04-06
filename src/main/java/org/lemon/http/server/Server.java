@@ -12,15 +12,15 @@ import java.nio.channels.SocketChannel;
  */
 public class Server {
 
-    protected Reactor mainReactor;
-    protected Reactor subReactor;
+    protected ReactorGroup boss;
+    protected ReactorGroup workers;
 
     private int port;
 
 
-    public Server reactor(Reactor mainReactor, Reactor subReactor) {
-        this.mainReactor = mainReactor;
-        this.subReactor = subReactor;
+    public Server reactor(ReactorGroup boss, ReactorGroup workers) {
+        this.boss = boss;
+        this.workers = workers;
         return this;
     }
 
@@ -37,14 +37,14 @@ public class Server {
                         IOSocketChannel ioSocketChannel = new IOSocketChannel();
                         ioSocketChannel.setJavaChannel(c);
                         ioSocketChannel.setIOHandler(new Handler(ioSocketChannel));
-                        subReactor.register(ioSocketChannel);
+                        workers.next().register(ioSocketChannel);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         });
-        this.mainReactor.register(ioServerSocketChannel);
+        this.boss.next().register(ioServerSocketChannel);
     }
 
     public void setPort(int port) {
@@ -58,8 +58,10 @@ public class Server {
             port = Integer.valueOf(args[0]);
         }
         Server server = new Server();
-        Reactor reactor = new Reactor();
-        server.reactor(reactor, reactor);
+        ReactorGroup boss = new ReactorGroup(1);
+        ReactorGroup workers = new ReactorGroup(1);
+        //server.reactor(boss, boss);
+        server.reactor(boss, workers);
         server.setPort(port);
         server.start();
 

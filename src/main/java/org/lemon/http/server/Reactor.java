@@ -19,10 +19,11 @@ public class Reactor implements Runnable {
     SelectorProvider provider = SelectorProvider.provider();
     Thread worker;
 
-    Reactor() throws IOException {
+    Reactor(String threadName) throws IOException {
         selector = provider.openSelector();
         Thread t = new Thread(this);
         t.setDaemon(false);
+        t.setName("Reactor-" + threadName);
         worker = t;
         worker.start();
     }
