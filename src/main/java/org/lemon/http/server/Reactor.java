@@ -7,8 +7,8 @@ import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.spi.SelectorProvider;
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -23,7 +23,7 @@ public class Reactor implements Runnable, Executor {
     SelectorProvider provider = SelectorProvider.provider();
     Thread worker;
 
-    private LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue();
+    private Queue<Runnable> queue = new LinkedBlockingQueue<>();
     protected AtomicBoolean started = new AtomicBoolean(false);
 
     Reactor() throws IOException {
@@ -46,15 +46,8 @@ public class Reactor implements Runnable, Executor {
     public void run() {
         try {
             while (started.get()) {
-                /*System.out.println("current keys: " + selector.keys().size());
-                selector.select(1000L);*/
                 if (!queue.isEmpty()) {
-                    int size = queue.size();
-                    ArrayList<Runnable> runnables = new ArrayList<>(size);
-                    queue.drainTo(runnables, size);
-                    for (Runnable task : runnables) {
-                        task.run();
-                    }
+                    runAllTasks();
                 }
                 selector.select(2000L);
                 Set selected = selector.selectedKeys();
@@ -96,5 +89,27 @@ public class Reactor implements Runnable, Executor {
             }
         }
         selector.wakeup();
+    }
+
+
+    public void runAllTasks() {
+        for (; ; ) {
+            Runnable task = queue.poll();
+            if (task == null) {
+                break;
+            }
+            safeExecute(task);
+        }
+    }
+
+    /**
+     * Try to execute the given {@link Runnable} and just log if it throws a {@link Throwable}.
+     */
+    protected static void safeExecute(Runnable task) {
+        try {
+            task.run();
+        } catch (Throwable t) {
+            System.out.println("A task raised an exception. Task: {}" + task);
+        }
     }
 }
