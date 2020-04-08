@@ -1,10 +1,14 @@
 package org.lemon.http.server;
 
+import org.lemon.http.server.channel.IOChannel;
 import org.lemon.http.server.channel.IOServerSocketChannel;
 import org.lemon.http.server.channel.IOSocketChannel;
 
 import java.io.IOException;
+import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -16,6 +20,8 @@ public class Server {
     protected ReactorGroup workers;
 
     private int port;
+
+    public static Map<IOChannel, IOChannel> connections = new ConcurrentHashMap<>();
 
 
     public Server reactor(ReactorGroup boss, ReactorGroup workers) {
@@ -35,6 +41,7 @@ public class Server {
                     c = channel.read();
                     if (c != null) {
                         IOSocketChannel ioSocketChannel = new IOSocketChannel();
+                        connections.put(ioSocketChannel, ioSocketChannel);
                         ioSocketChannel.setJavaChannel(c);
                         ioSocketChannel.setIOHandler(new Handler(ioSocketChannel));
                         workers.next().register(ioSocketChannel);
@@ -59,11 +66,29 @@ public class Server {
         }
         Server server = new Server();
         ReactorGroup boss = new ReactorGroup(1);
-        ReactorGroup workers = new ReactorGroup(8);
+        ReactorGroup workers = new ReactorGroup(1);
         //server.reactor(boss, boss);
         server.reactor(boss, workers);
         server.setPort(port);
         server.start();
+        Thread t = new Thread(() -> {
+            while (true) {
+                try {
+                    Thread.sleep(5000L);
+                    Object arr[] = connections.values().toArray();
+                    if (arr.length > 0) {
+                        IOChannel ioChannel = (IOChannel) arr[0];
+                        System.out.println(ioChannel.getNioChannelHandler());
+                        Selector selector = ioChannel.getSelector();
+                        System.out.println(selector.keys().iterator().next().interestOps());
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+        });
+        t.start();
 
     }
 

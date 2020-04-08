@@ -17,7 +17,7 @@ public abstract class IOChannel {
     protected SelectionKey sk;
 
     protected int interestOps = SelectionKey.OP_READ;
-
+    Selector selector;
 
     public void register(Selector selector) throws IOException {
         javaChannel.configureBlocking(false);
@@ -25,6 +25,7 @@ public abstract class IOChannel {
         sk = javaChannel.register(selector, 0);
         sk.attach(this);
         sk.interestOps(interestOps);
+        this.selector = selector;
         selector.wakeup();//sel.select() is block ， so need wake up
     }
 
@@ -50,6 +51,10 @@ public abstract class IOChannel {
 
     public SelectableChannel getJavaChannel() {
         return javaChannel;
+    }
+
+    public int read(ByteBuffer buffer) throws IOException {
+        return ((SocketChannel) javaChannel).read(buffer);
     }
 
     public int write(ByteBuffer buffer) throws IOException {
@@ -99,4 +104,7 @@ public abstract class IOChannel {
         }
     }
 
+    public Selector getSelector() {
+        return selector;
+    }
 }

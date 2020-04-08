@@ -13,6 +13,7 @@ public class IOServerSocketChannel extends IOChannel{
     @Override
     public void bind(int port) throws IOException {
         this.javaChannel = ServerSocketChannel.open();
+        ((ServerSocketChannel)this.javaChannel).socket().setReuseAddress(true);
         this.interestOps = SelectionKey.OP_ACCEPT;
         ((ServerSocketChannel)javaChannel).bind(new InetSocketAddress(port));
     }

@@ -40,7 +40,7 @@ public class Handler implements NioChannelHandler {
                 buf = buffer;
             }
 
-            int localRead = socketChannel.read(buf);
+            int localRead = ioChannel.read(buf);
             if (localRead == 0) {
                 return;
             }
@@ -93,10 +93,10 @@ public class Handler implements NioChannelHandler {
         if (buffer.remaining() >= 4) {
             int len = buffer.getInt();
             if (buffer.remaining() < len) {
-                System.out.println("TCP unpack!");
+                //System.out.println("TCP unpack!");
                 buffer.position(buffer.position() - 4);
             } else if (buffer.remaining() > len) {
-                System.out.println("TCP sticky bag!");
+                //System.out.println("TCP sticky bag!");
                 if (len <= 0) {
                     System.out.println("TCP len -1");
                 }
@@ -116,7 +116,7 @@ public class Handler implements NioChannelHandler {
     private void channelRead(SocketChannel socketChannel, Object obj) throws IOException {
         //System.out.print("request:" + obj);
         //biz handler
-        ByteBuffer buf = ByteBuffer.wrap(("response:" + obj).getBytes(CharsetUtil.UTF_8));
+        ByteBuffer buf = ByteBuffer.wrap(obj.toString().getBytes(CharsetUtil.UTF_8));
         write(buf);
     }
 
@@ -140,13 +140,22 @@ public class Handler implements NioChannelHandler {
     private void channelInactive(SocketChannel socketChannel) throws Exception {
         LOG.info("channelInactive .... " + ioChannel.connectionToString());
         ioChannel.close();
+        Server.connections.remove(ioChannel);
     }
 
     private void catchException(Exception e) {
         LOG.info("catchException .... " + ioChannel.connectionToString());
         e.printStackTrace();
         ioChannel.close();
+        Server.connections.remove(ioChannel);
     }
 
-
+    @Override
+    public String toString() {
+        return "Handler{" +
+                "buf=" + buf.hasRemaining() +
+                ", outboundBuffer=" + outboundBuffer.size() +
+                ", ioChannel=" + ioChannel.connectionToString() +
+                '}';
+    }
 }

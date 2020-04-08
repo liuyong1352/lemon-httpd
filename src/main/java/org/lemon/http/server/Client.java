@@ -15,9 +15,12 @@ public class Client {
 
     private SocketChannel socketChannel;
 
+    private int counter = 0;
+
     public Client() throws IOException {
         socketChannel = SocketChannel.open();
-        /*c.socket().setReceiveBufferSize(1024);
+        socketChannel.socket().setReuseAddress(true);
+       /* socketChannel.socket().setReceiveBufferSize(1024);
         int receiveBufferSize = socketChannel.socket().getReceiveBufferSize(); //65536
         System.out.println(receiveBufferSize);*/
     }
@@ -28,17 +31,28 @@ public class Client {
 
     public int write(String msg) throws IOException {
         byte data[] = msg.getBytes(CharsetUtil.UTF_8);
+        counter += data.length;
+        int total = 4 + data.length;
         ByteBuffer byteBuffer = ByteBuffer.allocate(4 + data.length);
         byteBuffer.putInt(data.length);
         byteBuffer.put(data);
         byteBuffer.flip();
+        int n = socketChannel.write(byteBuffer);
+        if(n != total){
+            System.out.println("incomplete write");
+        }
         return socketChannel.write(byteBuffer);
     }
 
     public String readString() throws IOException {
-        ByteBuffer buffer = ByteBuffer.allocate(1024);
+        ByteBuffer buffer = ByteBuffer.allocate(1024 * 8);
         int n = socketChannel.read(buffer);
-
+        if (n == -1) {
+            System.out.println("Connection inActive");
+            close();
+            return null;
+        }
+        counter -= n;
         buffer.flip();
         byte data[];
         if (buffer.hasArray()) {
@@ -52,6 +66,7 @@ public class Client {
 
 
     public void close() throws IOException {
+        printThreadInfo();
         socketChannel.close();
     }
 
@@ -60,11 +75,10 @@ public class Client {
         while (n > 0) {
             test();
             n--;
-            System.out.println("###########################" + n);
         }
     }
 
-    public static void test() throws Exception{
+    public static void test() throws Exception {
         int n = 10;
         Thread threads[] = new Thread[n];
 
@@ -90,7 +104,6 @@ public class Client {
     public static void body() throws Exception {
         Client client = new Client();
         client.connect("localhost", 8080);
-
         int loop = 1000;//100000
         int i = 0;
         String threadName = Thread.currentThread().getName();
@@ -99,20 +112,21 @@ public class Client {
             i++;
         }
         client.write(threadName + "#");
-        client.readByte(loop + 10000000);
+        client.readByte();
         client.close(); //try do not close
     }
 
-    public void readByte(int loop) throws IOException {
-        boolean f = true;
-        int n = 0;
-        while (f && (n < loop)) {
+    public void readByte() throws IOException {
+        while (counter > 0) {
             String s = readString();
-            n++;
-            if (s.contains("#")) {
-                System.out.println(s);
-                break;
+            if (counter == 0) {
+                System.out.println("Text#" + Thread.currentThread().getName() + " " + s);
             }
         }
+    }
+
+    private void printThreadInfo() throws IOException {
+        System.out.println("Close:" + Thread.currentThread().getName() + socketChannel.getLocalAddress().toString() + "---->"
+                + socketChannel.getRemoteAddress().toString());
     }
 }
