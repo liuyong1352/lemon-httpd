@@ -36,7 +36,7 @@ public class Client {
         byte data[] = msg.getBytes(CharsetUtil.UTF_8);
         counter += data.length;
         int total = 4 + data.length;
-        ByteBuffer byteBuffer = ByteBuffer.allocate(4 + data.length);
+        ByteBuffer byteBuffer = ByteBuffer.allocate(total);
         byteBuffer.putInt(data.length);
         byteBuffer.put(data);
         byteBuffer.flip();
@@ -82,7 +82,7 @@ public class Client {
     }
 
     public static void test() throws Exception {
-        int n = 10;
+        int n = 20;
         Thread threads[] = new Thread[n];
 
         for (int i = 0; i < n; i++) {
@@ -90,7 +90,7 @@ public class Client {
             t = new Thread(() -> {
                 try {
                     body();
-                    //Thread.sleep(1000);
+                    Thread.sleep(1000);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -108,7 +108,7 @@ public class Client {
         Client client = new Client();
         client.connect("localhost", 8080);
         int n = 10;
-        for (int i = 0; i < n; n++) {
+        for (int i = 0; i < n; i++) {
             testSendAndWrite(client);
         }
         client.close(); //try do not close
@@ -116,7 +116,7 @@ public class Client {
 
     public static void testSendAndWrite(Client client) throws Exception {
         Thread.currentThread().setName(client.connectionToString() + Thread.currentThread().getName());
-        int loop = 100;//100000
+        int loop = 50;//100000
         int i = 0;
 
         String threadName = Thread.currentThread().getName();
@@ -130,12 +130,17 @@ public class Client {
     }
 
     public void readByte() throws IOException {
-        while (counter > 0) {
+        while (true) {
             String s = readString();
             if (counter == 0) {
                 System.out.println("End#" + Thread.currentThread().getName() + " \tText: " + s);
+                break;
+            } else if(counter < 0 ){
+                throw new IllegalArgumentException("Ccounter :" + counter);
             }
+
         }
+
     }
 
     public String connectionToString() throws IOException {
