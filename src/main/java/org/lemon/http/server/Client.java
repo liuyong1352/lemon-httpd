@@ -44,7 +44,7 @@ public class Client {
         if (n != total) {
             System.out.println("incomplete write");
         }
-        return socketChannel.write(byteBuffer);
+        return n;
     }
 
     public String readString() throws IOException {
