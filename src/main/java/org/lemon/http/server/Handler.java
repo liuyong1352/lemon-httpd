@@ -99,6 +99,7 @@ public class Handler implements NioChannelHandler {
                 //System.out.println("TCP sticky bag!");
                 if (len <= 0) {
                     System.out.println("TCP len -1");
+                    throw new IllegalArgumentException("Bad Len:" + len);
                 }
                 byte data[] = new byte[len];
                 buffer.get(data, 0, len);
