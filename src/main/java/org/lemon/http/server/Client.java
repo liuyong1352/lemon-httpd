@@ -26,7 +26,10 @@ public class Client {
     }
 
     public void connect(String host, int port) throws IOException {
-        socketChannel.connect(new InetSocketAddress(host, port));
+        boolean result = socketChannel.connect(new InetSocketAddress(host, port));
+        if (!result) {
+            throw new RuntimeException("Not connected!");
+        }
     }
 
     public int write(String msg) throws IOException {
@@ -38,7 +41,7 @@ public class Client {
         byteBuffer.put(data);
         byteBuffer.flip();
         int n = socketChannel.write(byteBuffer);
-        if(n != total){
+        if (n != total) {
             System.out.println("incomplete write");
         }
         return socketChannel.write(byteBuffer);
@@ -106,6 +109,7 @@ public class Client {
         client.connect("localhost", 8080);
         int loop = 1000;//100000
         int i = 0;
+        Thread.currentThread().setName(client.connectionToString() + Thread.currentThread().getName());
         String threadName = Thread.currentThread().getName();
         while (i < loop) {
             client.write(threadName + "Say hello to student Xiao Ming ! loop:" + i + "\n");
@@ -120,13 +124,17 @@ public class Client {
         while (counter > 0) {
             String s = readString();
             if (counter == 0) {
-                System.out.println("Text#" + Thread.currentThread().getName() + " " + s);
+                System.out.println("End#" + Thread.currentThread().getName() + " \tText: " + s);
             }
         }
     }
 
+    public String connectionToString() throws IOException {
+        return socketChannel.getLocalAddress().toString() + "---->"
+                + socketChannel.getRemoteAddress().toString();
+    }
+
     private void printThreadInfo() throws IOException {
-        System.out.println("Close:" + Thread.currentThread().getName() + socketChannel.getLocalAddress().toString() + "---->"
-                + socketChannel.getRemoteAddress().toString());
+        System.out.println("Close:" + connectionToString());
     }
 }

@@ -67,10 +67,10 @@ public class Server {
         Server server = new Server();
         ReactorGroup boss = new ReactorGroup(1);
         ReactorGroup workers = new ReactorGroup(1);
-        //server.reactor(boss, boss);
         server.reactor(boss, workers);
         server.setPort(port);
         server.start();
+
         Thread t = new Thread(() -> {
             while (true) {
                 try {
@@ -78,9 +78,9 @@ public class Server {
                     Object arr[] = connections.values().toArray();
                     if (arr.length > 0) {
                         IOChannel ioChannel = (IOChannel) arr[0];
-                        System.out.println(ioChannel.getNioChannelHandler());
+                        System.out.print(ioChannel.getNioChannelHandler() + "\tinterestOps:" + ioChannel.getInterestOps());
                         Selector selector = ioChannel.getSelector();
-                        System.out.println(selector.keys().iterator().next().interestOps());
+                        System.out.println("\tinterestOps: " + selector.keys().iterator().next().interestOps());
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

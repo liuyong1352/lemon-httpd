@@ -82,6 +82,10 @@ public abstract class IOChannel {
         }
     }
 
+    public int getInterestOps(){
+        return sk.interestOps();
+    }
+
     public void close() {
         try {
             /*socketChannel.shutdownInput();
