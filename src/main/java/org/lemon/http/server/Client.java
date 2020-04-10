@@ -107,9 +107,18 @@ public class Client {
     public static void body() throws Exception {
         Client client = new Client();
         client.connect("localhost", 8080);
-        int loop = 1000;//100000
-        int i = 0;
+        int n = 10;
+        for (int i = 0; i < n; n++) {
+            testSendAndWrite(client);
+        }
+        client.close(); //try do not close
+    }
+
+    public static void testSendAndWrite(Client client) throws Exception {
         Thread.currentThread().setName(client.connectionToString() + Thread.currentThread().getName());
+        int loop = 100;//100000
+        int i = 0;
+
         String threadName = Thread.currentThread().getName();
         while (i < loop) {
             client.write(threadName + "Say hello to student Xiao Ming ! loop:" + i + "\n");
@@ -117,7 +126,7 @@ public class Client {
         }
         client.write(threadName + "#");
         client.readByte();
-        client.close(); //try do not close
+
     }
 
     public void readByte() throws IOException {
