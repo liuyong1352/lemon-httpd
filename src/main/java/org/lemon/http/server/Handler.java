@@ -5,7 +5,6 @@ import org.lemon.http.server.channel.IOChannel;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -25,13 +24,19 @@ public class Handler implements NioChannelHandler {
 
     IOChannel ioChannel;
 
-    public Handler(IOChannel ioChannel) {
-        this.ioChannel = ioChannel;
+
+    protected Handler bizHandler;
+
+    public Handler() {
+
+    }
+
+    public void setBizHandler(Handler bizHandler) {
+        this.bizHandler = bizHandler;
     }
 
     @Override
     public void onRead(IOChannel ioChannel) {
-        SocketChannel socketChannel = (SocketChannel) ioChannel.getJavaChannel();
         try {
             if (buf.position() != 0) {
                 ByteBuffer buffer = ByteBuffer.allocate(1024);
@@ -45,7 +50,7 @@ public class Handler implements NioChannelHandler {
                 return;
             }
             if (localRead < 0) {
-                channelInactive(socketChannel);
+                channelInactive(ioChannel);
                 return;
             }
 
@@ -54,14 +59,13 @@ public class Handler implements NioChannelHandler {
             decode(buf, outList);
 
             for (Object o : outList) {
-                channelRead(socketChannel, o);
+                channelRead(ioChannel, o);
             }
-
 
             //process
             //write to channel
         } catch (Exception e) {
-            catchException(e);
+            catchException(ioChannel, e);
         }
     }
 
@@ -71,7 +75,7 @@ public class Handler implements NioChannelHandler {
         try {
             while (!outboundBuffer.isEmpty()) {
                 buf = outboundBuffer.removeFirst();
-                if (write(buf)) {
+                if (write(ioChannel, buf)) {
                     continue;
                 }
                 break;
@@ -80,7 +84,7 @@ public class Handler implements NioChannelHandler {
                 ioChannel.clearOpWrite();
             }
         } catch (IOException e) {
-            catchException(e);
+            catchException(ioChannel, e);
         }
     }
 
@@ -114,37 +118,42 @@ public class Handler implements NioChannelHandler {
         }
     }
 
-    private void channelRead(SocketChannel socketChannel, Object obj) throws IOException {
+    protected void channelRead(IOChannel ioChannel, Object obj) throws IOException {
         //System.out.print("request:" + obj);
         //biz handler
-        ByteBuffer buf = ByteBuffer.wrap(obj.toString().getBytes(CharsetUtil.UTF_8));
-        write(buf);
+        byte bytes[] = obj.toString().getBytes(CharsetUtil.UTF_8);
+        int len = bytes.length;
+        ByteBuffer buf = ByteBuffer.allocate(4 + len);
+        buf.putInt(len);
+        buf.put(bytes);
+        buf.flip();
+        write(ioChannel, buf);
     }
 
-    private boolean write(ByteBuffer buf) throws IOException {
+    private boolean write(IOChannel ioChannel, ByteBuffer buf) throws IOException {
         int len = buf.remaining();
         int n = ioChannel.write(buf);
         if (n != len) {
             //setOpWrite
-            incompleteWrite(buf);
+            incompleteWrite(ioChannel, buf);
             return false;
         }
         return true;
     }
 
-    private void incompleteWrite(ByteBuffer buf) {
+    private void incompleteWrite(IOChannel ioChannel, ByteBuffer buf) {
         outboundBuffer.addLast(buf);
         ioChannel.setOpWrite();
     }
 
 
-    private void channelInactive(SocketChannel socketChannel) throws Exception {
+    private void channelInactive(IOChannel ioChannel) throws Exception {
         LOG.info("channelInactive .... " + ioChannel.connectionToString());
         ioChannel.close();
         Server.connections.remove(ioChannel);
     }
 
-    private void catchException(Exception e) {
+    private void catchException(IOChannel ioChannel, Exception e) {
         LOG.info("catchException .... " + ioChannel.connectionToString());
         e.printStackTrace();
         ioChannel.close();

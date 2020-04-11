@@ -2,14 +2,17 @@ package org.lemon.http.server;
 
 
 import org.lemon.http.server.channel.IOChannel;
+import org.lemon.http.server.channel.IOSocketChannel;
 
 import java.io.IOException;
+import java.net.SocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.Iterator;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -41,6 +44,19 @@ public class Reactor implements Runnable, Executor {
 
     }
 
+    public CompletableFuture<IOChannel> connect(IOChannel ioChannel,SocketAddress socketAddress){
+        CompletableFuture<IOChannel> channelCompletableFuture = new CompletableFuture<>();
+        execute(() -> {
+            try {
+                ioChannel.register(selector);
+                ioChannel.connect(socketAddress,channelCompletableFuture);
+            } catch (IOException e) {
+                channelCompletableFuture.completeExceptionally(e);
+            }
+        });
+        return channelCompletableFuture;
+    }
+
 
     @Override
     public void run() {
@@ -62,6 +78,9 @@ public class Reactor implements Runnable, Executor {
                     }
                     if ((readyOps & (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0 || readyOps == 0) {
                         ioChannel.getNioChannelHandler().onRead(ioChannel);
+                    }
+                    if ((readyOps & SelectionKey.OP_CONNECT) != 0){
+                        ioChannel.finishConnection();
                     }
                 }
 

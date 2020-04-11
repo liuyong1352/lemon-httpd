@@ -3,11 +3,13 @@ package org.lemon.http.server.channel;
 import org.lemon.http.server.NioChannelHandler;
 
 import java.io.IOException;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.CompletableFuture;
 
 public abstract class IOChannel {
 
@@ -29,7 +31,25 @@ public abstract class IOChannel {
         selector.wakeup();//sel.select() is block ， so need wake up
     }
 
+    public void interestOps(int interestOps) {
+        if (!sk.isValid()) {
+            return;
+        }
+        final int currentInterestOps = sk.interestOps();
+        if ((currentInterestOps & interestOps) == 0) {
+            sk.interestOps(currentInterestOps | interestOps);
+        }
+    }
+
     public void bind(int port) throws IOException {
+
+    }
+
+    public CompletableFuture<IOChannel> connect(SocketAddress socketAddress,CompletableFuture<IOChannel> connectionFuture){
+        return null;
+    }
+
+    public void finishConnection(){
 
     }
 
@@ -63,13 +83,7 @@ public abstract class IOChannel {
 
 
     public void setOpWrite() {
-        if (!sk.isValid()) {
-            return;
-        }
-        final int interestOps = sk.interestOps();
-        if ((interestOps & SelectionKey.OP_WRITE) == 0) {
-            sk.interestOps(interestOps | SelectionKey.OP_WRITE);
-        }
+        interestOps(SelectionKey.OP_WRITE);
     }
 
     public void clearOpWrite() {
@@ -88,8 +102,6 @@ public abstract class IOChannel {
 
     public void close() {
         try {
-            /*socketChannel.shutdownInput();
-            socketChannel.shutdownOutput();*/
             javaChannel.close();
         } catch (IOException e) {
             e.printStackTrace();

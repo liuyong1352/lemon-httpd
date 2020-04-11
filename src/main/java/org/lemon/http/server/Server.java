@@ -40,10 +40,9 @@ public class Server {
                 try {
                     c = channel.read();
                     if (c != null) {
-                        IOSocketChannel ioSocketChannel = new IOSocketChannel();
+                        IOSocketChannel ioSocketChannel = new IOSocketChannel(c);
                         connections.put(ioSocketChannel, ioSocketChannel);
-                        ioSocketChannel.setJavaChannel(c);
-                        ioSocketChannel.setIOHandler(new Handler(ioSocketChannel));
+                        ioSocketChannel.setIOHandler(new Handler());
                         workers.next().register(ioSocketChannel);
                     }
                 } catch (IOException e) {

@@ -1,3 +1,4 @@
+import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -15,7 +16,8 @@ import java.util.List;
 public class NettyServer {
 
     public static void main(String[] args) throws Exception {
-
+        Bootstrap bootstrap = new Bootstrap();
+        //bootstrap.connect()
         ServerBootstrap serverBootstrap = new ServerBootstrap();
         serverBootstrap.group(new NioEventLoopGroup(), new NioEventLoopGroup())
                 .channel(NioServerSocketChannel.class)
