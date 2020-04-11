@@ -76,12 +76,12 @@ public class Client {
     public static void main(String args[]) throws Exception {
         int n = 100;
         while (n > 0) {
-            test();
+            test(n);
             n--;
         }
     }
 
-    public static void test() throws Exception {
+    public static void test(int loop) throws Exception {
         int n = 10;
         Thread threads[] = new Thread[n];
 
@@ -89,7 +89,7 @@ public class Client {
             Thread t;
             t = new Thread(() -> {
                 try {
-                    body();
+                    body(loop);
                     //Thread.sleep(1000);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -104,19 +104,18 @@ public class Client {
         }
     }
 
-    public static void body() throws Exception {
+    public static void body(int loop) throws Exception {
         Client client = new Client();
         client.connect("localhost", 8080);
         int n = 10;
         for (int i = 0; i < n; i++) {
-            testSendAndWrite(client);
+            testSendAndWrite(client , loop);
         }
         client.close(); //try do not close
     }
 
-    public static void testSendAndWrite(Client client) throws Exception {
+    public static void testSendAndWrite(Client client,int loop) throws Exception {
         Thread.currentThread().setName(client.connectionToString() + Thread.currentThread().getName());
-        int loop = 100;//100000
         int i = 0;
 
         String threadName = Thread.currentThread().getName();
