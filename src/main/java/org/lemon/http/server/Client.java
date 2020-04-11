@@ -74,7 +74,7 @@ public class Client {
     }
 
     public static void main(String args[]) throws Exception {
-        int n = 1000;
+        int n = 100;
         while (n > 0) {
             test();
             n--;
@@ -82,7 +82,7 @@ public class Client {
     }
 
     public static void test() throws Exception {
-        int n = 20;
+        int n = 10;
         Thread threads[] = new Thread[n];
 
         for (int i = 0; i < n; i++) {
@@ -90,7 +90,7 @@ public class Client {
             t = new Thread(() -> {
                 try {
                     body();
-                    Thread.sleep(1000);
+                    //Thread.sleep(1000);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -116,7 +116,7 @@ public class Client {
 
     public static void testSendAndWrite(Client client) throws Exception {
         Thread.currentThread().setName(client.connectionToString() + Thread.currentThread().getName());
-        int loop = 50;//100000
+        int loop = 100;//100000
         int i = 0;
 
         String threadName = Thread.currentThread().getName();

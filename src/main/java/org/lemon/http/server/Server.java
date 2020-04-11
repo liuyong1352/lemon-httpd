@@ -66,7 +66,7 @@ public class Server {
         }
         Server server = new Server();
         ReactorGroup boss = new ReactorGroup(1);
-        ReactorGroup workers = new ReactorGroup(1);
+        ReactorGroup workers = new ReactorGroup(4);
         server.reactor(boss, workers);
         server.setPort(port);
         server.start();
@@ -88,7 +88,7 @@ public class Server {
             }
 
         });
-        t.start();
+        //t.start();
 
     }
 
