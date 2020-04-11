@@ -19,7 +19,7 @@ public class Handler implements NioChannelHandler {
     public static Logger LOG = Logger.getAnonymousLogger();
 
 
-    ByteBuffer buf = ByteBuffer.allocate(1024 * 8);
+    ByteBuffer buf = ByteBuffer.allocate(1024);
 
     LinkedList<ByteBuffer> outboundBuffer = new LinkedList();
 
@@ -34,7 +34,7 @@ public class Handler implements NioChannelHandler {
         SocketChannel socketChannel = (SocketChannel) ioChannel.getJavaChannel();
         try {
             if (buf.position() != 0) {
-                ByteBuffer buffer = ByteBuffer.allocate(1024 * 8);
+                ByteBuffer buffer = ByteBuffer.allocate(1024);
                 buffer.put(buf);
                 buf.clear();
                 buf = buffer;
