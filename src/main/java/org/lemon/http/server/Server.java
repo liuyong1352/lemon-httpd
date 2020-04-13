@@ -59,7 +59,7 @@ public class Server {
 
 
     public static void main(String args[]) throws Exception {
-        int port = 8080;
+        int port = 8083;
         if (args.length == 1) {
             port = Integer.valueOf(args[0]);
         }
@@ -73,21 +73,22 @@ public class Server {
         Thread t = new Thread(() -> {
             while (true) {
                 try {
-                    Thread.sleep(5000L);
-                    Object arr[] = connections.values().toArray();
+                    Thread.sleep(1000L);
+                    System.out.println(connections.size());
+                    /*Object arr[] = connections.values().toArray();
                     if (arr.length > 0) {
                         IOChannel ioChannel = (IOChannel) arr[0];
                         System.out.print(ioChannel.getNioChannelHandler() + "\tinterestOps:" + ioChannel.getInterestOps());
                         Selector selector = ioChannel.getSelector();
                         System.out.println("\tinterestOps: " + selector.keys().iterator().next().interestOps());
-                    }
+                    }*/
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
 
         });
-        //t.start();
+        t.start();
 
     }
 

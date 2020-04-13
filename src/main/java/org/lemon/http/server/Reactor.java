@@ -44,12 +44,12 @@ public class Reactor implements Runnable, Executor {
 
     }
 
-    public CompletableFuture<IOChannel> connect(IOChannel ioChannel,SocketAddress socketAddress){
+    public CompletableFuture<IOChannel> connect(IOChannel ioChannel, SocketAddress socketAddress) {
         CompletableFuture<IOChannel> channelCompletableFuture = new CompletableFuture<>();
         execute(() -> {
             try {
                 ioChannel.register(selector);
-                ioChannel.connect(socketAddress,channelCompletableFuture);
+                ioChannel.connect(socketAddress, channelCompletableFuture);
             } catch (IOException e) {
                 channelCompletableFuture.completeExceptionally(e);
             }
@@ -62,10 +62,14 @@ public class Reactor implements Runnable, Executor {
     public void run() {
         try {
             while (started.get()) {
+
                 if (!queue.isEmpty()) {
-                    runAllTasks();
+                    selector.selectNow();
+                } else {
+                    selector.select(2000);
                 }
-                selector.select(2000L);
+
+
                 Set selected = selector.selectedKeys();
                 Iterator it = selected.iterator();
                 while (it.hasNext()) {
@@ -79,12 +83,16 @@ public class Reactor implements Runnable, Executor {
                     if ((readyOps & (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0 || readyOps == 0) {
                         ioChannel.getNioChannelHandler().onRead(ioChannel);
                     }
-                    if ((readyOps & SelectionKey.OP_CONNECT) != 0){
+                    if ((readyOps & SelectionKey.OP_CONNECT) != 0) {
                         ioChannel.finishConnection();
                     }
                 }
 
                 selected.clear();
+                if (!queue.isEmpty()) {
+                    runAllTasks();
+                }
+
             }
 
         } catch (IOException e) {
@@ -112,12 +120,15 @@ public class Reactor implements Runnable, Executor {
 
 
     public void runAllTasks() {
-        for (; ; ) {
+        int count = 10;
+        for (; count > 0; ) {
             Runnable task = queue.poll();
             if (task == null) {
                 break;
             }
+
             safeExecute(task);
+            count--;
         }
     }
 
