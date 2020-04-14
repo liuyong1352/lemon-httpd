@@ -2,6 +2,8 @@
 
 #### http1.0.1.7-重构Client 修改成NIO
 
+1.将Client修改成Nio
+2.修改ClientTest类，使用消息个数判断是否结束标识
 
 #### http1.0.1.6-修改结束判断方式
 
