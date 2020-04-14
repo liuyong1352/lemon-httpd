@@ -69,19 +69,20 @@ public class Server {
         server.reactor(boss, workers);
         server.setPort(port);
         server.start();
+        System.out.println("Listening on :" + port);
 
         Thread t = new Thread(() -> {
             while (true) {
                 try {
                     Thread.sleep(1000L);
                     System.out.println(connections.size());
-                    /*Object arr[] = connections.values().toArray();
+                    Object arr[] = connections.values().toArray();
                     if (arr.length > 0) {
                         IOChannel ioChannel = (IOChannel) arr[0];
                         System.out.print(ioChannel.getNioChannelHandler() + "\tinterestOps:" + ioChannel.getInterestOps());
                         Selector selector = ioChannel.getSelector();
                         System.out.println("\tinterestOps: " + selector.keys().iterator().next().interestOps());
-                    }*/
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

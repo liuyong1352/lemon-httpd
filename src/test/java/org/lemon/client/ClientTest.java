@@ -2,68 +2,62 @@ package org.lemon.client;
 
 
 import io.netty.util.CharsetUtil;
-import io.netty.util.internal.ConcurrentSet;
 import org.lemon.http.server.Handler;
 import org.lemon.http.server.ReactorGroup;
 import org.lemon.http.server.channel.IOChannel;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ClientTest {
 
-    static Set<String> strings = new ConcurrentSet<>();
+    private static final int total = 10_0000;
+    private static AtomicInteger couter = new AtomicInteger(total);
 
-    public static void main(String[] args) throws Exception{
+    public static void main(String[] args) throws Exception {
         Client client = new Client();
         client.gourp(new ReactorGroup(1));
-        Handler handler = new Handler(){
+        Handler handler = new Handler() {
             @Override
             protected void channelRead(IOChannel ioChannel, Object obj) throws IOException {
-                strings.remove(obj);
-                System.out.println(obj);
-                if(strings.isEmpty()){
+                int r = couter.decrementAndGet();
+                System.out.println(obj + "-" + r);
+                if (r == 0) {
                     System.out.println("Finish!");
                 }
             }
         };
         client.handler(handler);
-        CompletableFuture<IOChannel> ioChannelCompletableFuture = client.connect("localhost",8080);
+        CompletableFuture<IOChannel> ioChannelCompletableFuture = client.connect("localhost", 8083);
+
         ioChannelCompletableFuture.join();
         IOChannel ioChannel = ioChannelCompletableFuture.get();
-        for(int i=0;i<100000;i++){
+        for (int i = 0; i < total; i++) {
             String msg = "Good!!!" + i;
-            strings.add(msg);
+            write(ioChannel, msg);
         }
-
-        strings.forEach(s->{
-            try {
-                write(ioChannel,s);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-
-
-        //ioChannel.write(ByteBuffer.wrap("hi".getBytes()));
     }
 
-    public static int write(IOChannel ioChannel,String msg) throws IOException {
+    public static void write(IOChannel ioChannel, String msg) throws IOException {
         byte data[] = msg.getBytes(CharsetUtil.UTF_8);
         int total = 4 + data.length;
         ByteBuffer byteBuffer = ByteBuffer.allocate(total);
         byteBuffer.putInt(data.length);
         byteBuffer.put(data);
         byteBuffer.flip();
-        int n = ioChannel.write(byteBuffer);
-        if (n != total) {
-            System.out.println("incomplete write");
+        write(ioChannel, byteBuffer);
+    }
+
+    public static void write(IOChannel ioChannel, ByteBuffer buffer) throws IOException {
+        while (buffer.hasRemaining()) {
+            int n = ioChannel.write(buffer);
+            if (n != total) {
+                System.out.println("incomplete write");
+                continue;
+            }
         }
-        return n;
     }
 
     /*public String readString(IOChannel ioChannel) throws IOException {

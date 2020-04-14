@@ -22,9 +22,6 @@ public class Handler implements NioChannelHandler {
 
     LinkedList<ByteBuffer> outboundBuffer = new LinkedList();
 
-    IOChannel ioChannel;
-
-
     protected Handler bizHandler;
 
     public Handler() {
@@ -165,7 +162,6 @@ public class Handler implements NioChannelHandler {
         return "Handler{" +
                 "buf=" + buf.hasRemaining() +
                 ", outboundBuffer=" + outboundBuffer.size() +
-                ", ioChannel=" + ioChannel.connectionToString() +
                 '}';
     }
 }
