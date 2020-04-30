@@ -2,9 +2,9 @@ package org.lemon.client;
 
 
 import io.netty.util.CharsetUtil;
-import org.lemon.http.server.Handler;
-import org.lemon.http.server.ReactorGroup;
-import org.lemon.http.server.channel.IOChannel;
+import org.lemon.transport.Handler;
+import org.lemon.transport.ReactorGroup;
+import org.lemon.transport.channel.IOChannel;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

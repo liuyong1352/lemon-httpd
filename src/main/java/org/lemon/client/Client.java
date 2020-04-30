@@ -1,8 +1,8 @@
 package org.lemon.client;
 
 import org.lemon.Starter;
-import org.lemon.http.server.channel.IOChannel;
-import org.lemon.http.server.channel.IOSocketChannel;
+import org.lemon.transport.channel.IOChannel;
+import org.lemon.transport.channel.IOSocketChannel;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;

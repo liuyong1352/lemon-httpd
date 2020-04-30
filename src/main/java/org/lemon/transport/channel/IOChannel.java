@@ -1,6 +1,8 @@
-package org.lemon.http.server.channel;
+package org.lemon.transport.channel;
 
-import org.lemon.http.server.NioChannelHandler;
+import org.lemon.transport.InboundHandler;
+import org.lemon.transport.NioChannelHandler;
+import org.lemon.transport.OutboundHandler;
 
 import java.io.IOException;
 import java.net.SocketAddress;
@@ -9,6 +11,7 @@ import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.util.LinkedList;
 import java.util.concurrent.CompletableFuture;
 
 public abstract class IOChannel {
@@ -20,6 +23,11 @@ public abstract class IOChannel {
 
     protected int interestOps = SelectionKey.OP_READ;
     Selector selector;
+
+    /*private LinkedList<NioChannelHandler> inboundHandlers = new LinkedList<>();
+    private LinkedList<NioChannelHandler> outBoundHandlers = new LinkedList<>();
+    private int inboundCurrent = 0;
+    private int outboundCurrent = 0;*/
 
     public void register(Selector selector) throws IOException {
         javaChannel.configureBlocking(false);
@@ -57,6 +65,14 @@ public abstract class IOChannel {
         this.nioChannelHandler = nioChannelHandler;
     }
 
+//    public IOChannel addLast(NioChannelHandler nioChannelHandler){
+//        if(nioChannelHandler instanceof InboundHandler){
+//            inboundHandlers.addLast(nioChannelHandler);
+//        } else if(nioChannelHandler instanceof OutboundHandler) {
+//            outBoundHandlers.addLast(nioChannelHandler);
+//        }
+//        return this;
+//    }
     public NioChannelHandler getNioChannelHandler() {
         return nioChannelHandler;
     }

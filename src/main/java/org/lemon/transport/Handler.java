@@ -1,7 +1,7 @@
-package org.lemon.http.server;
+package org.lemon.transport;
 
 import io.netty.util.CharsetUtil;
-import org.lemon.http.server.channel.IOChannel;
+import org.lemon.transport.channel.IOChannel;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
